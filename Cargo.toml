@@ -1,0 +1,8 @@
+[package]
+name = "Chess_v2"
+version = "0.1.0"
+authors = ["JoeyJo <sivert-joh@hotmail.com>"]
+
+[dependencies]
+sfml = "0.14.0"
+futures = "0.1.25"

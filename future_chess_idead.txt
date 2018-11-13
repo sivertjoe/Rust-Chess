@@ -1,0 +1,67 @@
+extern crate futures; // ?
+// in Cargo.toml -> [dependencies] \n futures = "0.1.25"
+
+use futures::prelude::*;
+use futures::future::{ok, Future, FutureResult, loop_fn, Loop};
+use futures::future;
+use std::collections::HashMap;
+
+#[derive(PartialEq, Eq, Hash)]
+struct square
+{
+    row: u32,
+    col: u32
+}
+
+trait ChessPiece
+{
+    ...
+}
+
+struct Piece<'a>
+{
+    sprite: Sprite<'a>
+    rules : Box<ChessPiece>
+}
+
+fn create_piece(mut map: HashMap, ...) -> FutureResult<HashMap<square, Piece>, ()>
+{
+    // Add piece to map
+    . . .
+
+    future::ok(map)
+}
+
+fn add_texture(mut map: HashMap<square, Piece>, ...) -> FutureResult<(HashMap<square, Piece>, bool), ()>
+{
+    // Add the texture to the newly create piece
+    . . .
+
+    if done
+    {
+        future::ok(map, true)
+    }
+    future::ok(map, false)
+}
+
+
+fn create_pieces(res: &Recourses) -> HashMap<square, Piece>
+{
+    loop_fn(HashMap::new(), |map|
+    {
+        create_piece(map)
+        .and_then(|map| add_texture(map))
+        .and_then(|(map, done)|
+        {
+            if done
+            {
+                Ok(Loop::Break(map))
+            }
+            else
+            {
+                Ok(Loop::Continue(map))
+            }
+
+        }
+    }).wait().unwrap()
+}
