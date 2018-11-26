@@ -5,7 +5,7 @@ use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
 use piece_creator::*;
 use board::Board;
 use square::Square;
-use pieces::{Piece, Pawn, Knight, Bishop, Rook};
+use pieces::{Piece};
 use color::Color;
 use recourses::Recourses;
 
@@ -48,7 +48,7 @@ use self::futures::future::*;
 
 fn create_piece_set<'a>(res: &'a Recourses<Index>, window: &RenderWindow, scale: f32) -> HashMap<Square, Piece<'a>>
 {
-    create_pawns(HashMap::new(), res, Color::White, scale)
+        create_pawns(HashMap::new(), res, Color::White, scale)
         .and_then(|map| create_pawns(map, res, Color::Black, scale))
         
         .and_then(|map| create_knights(map, res, Color::White, scale))
@@ -57,8 +57,12 @@ fn create_piece_set<'a>(res: &'a Recourses<Index>, window: &RenderWindow, scale:
         .and_then(|map| create_bishops(map, res, Color::White, scale))
         .and_then(|map| create_bishops(map, res, Color::Black, scale))
 
-        .and_then(|map| create_rook(map, res, Color::White, scale))
-        .and_then(|map| create_rook(map, res, Color::Black, scale))
+        .and_then(|map| create_rooks(map, res, Color::White, scale))
+        .and_then(|map| create_rooks(map, res, Color::Black, scale))
+        .and_then(|map| create_king(map, res, Color::White, scale))
+        .and_then(|map| create_king(map, res, Color::Black, scale))
+        .and_then(|map| create_queen(map, res, Color::White, scale))
+        .and_then(|map| create_queen(map, res, Color::Black, scale))
         .and_then(|map| set_position(map, window)) 
         .wait().unwrap() 
 }
@@ -78,5 +82,11 @@ pub fn init_recourse(res: &mut Recourses<Index>)
 
     res.add_from_file("src/assets/rook_w.png", Index::WhiteRook);
     res.add_from_file("src/assets/rook_b.png", Index::BlackRook);
+
+    res.add_from_file("src/assets/king_w.png", Index::WhiteKing);
+    res.add_from_file("src/assets/king_b.png", Index::BlackKing);
+
+    res.add_from_file("src/assets/queen_w.png", Index::WhiteQueen);
+    res.add_from_file("src/assets/queen_b.png", Index::BlackQueen);
 }   
 

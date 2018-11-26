@@ -13,4 +13,10 @@ pub enum Index
 
     WhiteRook,
     BlackRook,
+
+    WhiteKing,
+    BlackKing,
+
+    WhiteQueen,
+    BlackQueen
 }

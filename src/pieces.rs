@@ -32,7 +32,9 @@ impl<'a> Piece<'a>
 
 }
 
-pub trait ChessPiece{}
+pub trait ChessPiece
+{
+}
 
 pub struct Pawn
 {
@@ -41,7 +43,7 @@ pub struct Pawn
 }
 impl Pawn
 {
-    pub fn new() -> Box<Pawn>
+    pub fn new() -> Box<ChessPiece>
     {
         Box::new( Pawn {
             first_move: true,
@@ -60,7 +62,7 @@ impl ChessPiece for Pawn
 pub struct Rook;
 impl Rook
 {
-    pub fn new() -> Box<Rook>
+    pub fn new() -> Box<ChessPiece>
     {
         Box::new( Rook {} )
     }
@@ -71,7 +73,7 @@ impl ChessPiece for Rook {}
 pub struct Knight;
 impl Knight
 {
-    pub fn new() -> Box<Knight>
+    pub fn new() -> Box<ChessPiece>
     {
         Box::new( Knight {} )
     }
@@ -83,11 +85,31 @@ impl ChessPiece for Knight
 pub struct Bishop;
 impl Bishop
 {
-    pub fn new() -> Box<Bishop>
+    pub fn new() -> Box<ChessPiece>
     {
         Box::new( Bishop{} )
     }
 }
 impl ChessPiece for Bishop{}
 
+pub struct King;
+impl King
+{
+    pub fn new() -> Box<ChessPiece>
+    {
+        Box::new( King {} )
+    }
+}
 
+impl ChessPiece for King {}
+
+pub struct Queen;
+impl Queen
+{
+    pub fn new() -> Box<ChessPiece>
+    {
+        Box::new( Queen {} )
+    }
+}
+
+impl ChessPiece for Queen {}
