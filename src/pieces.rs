@@ -9,7 +9,7 @@ pub struct Piece<'a>
 {
     pub sprite: Sprite<'a>,
     pub color: Color,
-    pub rules : Box<ChessPiece>,
+    pub rule : Box<ChessPiece>,
 }
 
 impl<'a> Piece<'a>
@@ -19,7 +19,7 @@ impl<'a> Piece<'a>
         Piece {
             sprite: Sprite::new(),
             color: color,
-            rules: typ,
+            rule: typ,
         }
     }
     pub fn set_position(&mut self, s: (u8, u8), square_size: f32, start: &Vector2f)
@@ -34,6 +34,12 @@ impl<'a> Piece<'a>
 
 pub trait ChessPiece
 {
+    fn mov(&self)
+    {
+        println!("{}", "hello");
+
+    }
+
 }
 
 pub struct Pawn

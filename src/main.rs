@@ -1,7 +1,7 @@
 extern crate sfml;
 
 use sfml::window::{VideoMode, Style, Event};
-
+use sfml::window::mouse::Button;
 use sfml::graphics::{RenderWindow, RenderTarget, Color};
 use std::env::args;
 #[allow(non_snake_case)]
@@ -16,6 +16,7 @@ mod square;
 mod piece_creator;
 mod index;
 mod color;
+mod utility;
 
 use index::Index;
 
@@ -36,7 +37,7 @@ fn main()
     let mut res: Recourses<Index> = Recourses::new();
     init_recourse(&mut res);
 
-    let game = Game::new(&mut res, &window);
+    let mut game = Game::new(&mut res, &window);
     
    
     while window.is_open()
@@ -46,6 +47,12 @@ fn main()
             match event
             {
                 Event::Closed => window.close(),
+                
+                Event::MouseButtonReleased{ button: Button::Left, ..} =>
+                    game.hold_mouse = false,
+                
+                Event::MouseButtonPressed{ button: Button::Left, .. } => 
+                    game.hold_mouse = true,
                 _ => {},
             };
         }

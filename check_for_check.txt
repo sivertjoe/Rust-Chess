@@ -1,0 +1,21 @@
+CHECK IF PUT ENEMY IN CHECK:
+
+move.is_legal()
+!king.in_check();
+square has none || square piece == opposite color
+
+
+Try to do it with future
+
+in_check = king.in_check()
+legal_move = piece.legal_move()
+
+
+move_was_legal = in_check.join(legal_move)
+match move_was_legal
+{
+	Ok(_), Ok(_) => true,
+	_ => false,
+}
+
+maybe maybe

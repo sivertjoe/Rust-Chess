@@ -279,14 +279,13 @@ pub fn create_board<'a>(res: &'a Recourses<Index>, window: &RenderWindow)
 
 
         // scale size appropriate to height 
-        let scale = window_size.y as f32 / bounds.height;
-        if scale != 1.0
+        board_scale = window_size.y as f32 / bounds.height;
+        if board_scale != 1.0
         {
-            board.set_scale( Vector2f::new(scale, scale)); 
-            board_scale = scale;
+            board.set_scale( Vector2f::new(board_scale, board_scale)); 
         }
         // Center the window
-        let x_diff = window_size.x as f32 - bounds.width * scale;
+        let x_diff = window_size.x as f32 - bounds.width * board_scale;
         if x_diff != 0.0
         {
             let new_pos = Vector2f::new( bounds.left + x_diff / 2.0, bounds.top);

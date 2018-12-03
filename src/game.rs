@@ -1,7 +1,6 @@
 extern crate sfml;
-use sfml::system::Vector2f;
 use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
-
+use sfml::window::mouse;
 use piece_creator::*;
 use board::Board;
 use square::Square;
@@ -9,11 +8,14 @@ use pieces::{Piece};
 use color::Color;
 use recourses::Recourses;
 
-use sfml::graphics::Sprite;
 use std::collections::HashMap;
 use index::Index;
+
+use utility;
 pub struct Game<'a>
 {
+    pub hold_mouse: bool,
+    temp_piece: Option<Piece<'a>>,
     board: Board<'a>,
     scale: f32, 
 }
@@ -25,6 +27,8 @@ impl<'a> Game<'a>
         let (board, scale) = create_board(res, window);
 
         Game {
+            hold_mouse: false,
+            temp_piece: None,
             scale: scale,
             board: Board::new(create_piece_set(res, window, scale), board) }
     }
@@ -36,12 +40,46 @@ impl<'a> Game<'a>
         self.board.squares
             .values()
             .for_each(|piece| window.draw(&piece.sprite ));
+        if let Some(ref piece) = self.temp_piece
+        {
+            window.draw(&piece.sprite);
+        }
     }
 
-    pub fn update(&self, window: &mut RenderWindow)
+    pub fn update(&mut self, window: &mut RenderWindow)
     {
+        if self.temp_piece.is_some()
+        {
+            if !self.hold_mouse
+            {
+                if self.is_legal_move()
+                {
+                    let square = utility::get_square(window);
+                    let mut piece = self.temp_piece.take().unwrap();
+                    piece.sprite.set_position(utility::get_boardpos(window, &square));
+                    self.board.squares.insert(square, piece);
+                }
+            }
+            else
+            {
+              let piece = self.temp_piece.as_mut().unwrap(); 
+              piece.sprite.set_position( utility::get_mousemid(window) );
+            }
+        }
+        else if mouse::Button::Left.is_pressed()
+        {
+            let square = utility::get_square(window);
+            self.temp_piece = self.board.squares.remove(&square);
+        }
         self.display(window);
     }
+
+    fn is_legal_move(&mut self) -> bool
+    {
+        true
+    }
+
+
 }
 extern crate futures;
 use self::futures::future::*;
