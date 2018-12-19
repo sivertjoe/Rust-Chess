@@ -1,0 +1,5 @@
+- implement Bishop, Knight, Queen, King mov function (ChessPiece)
+- Check for check after a move has been validated
+- Create undo function
+- Create re_do function / figure out what how to handle
+- Maybe more

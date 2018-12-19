@@ -1,3 +1,4 @@
+#![feature(nll)]
 extern crate sfml;
 
 use sfml::window::{VideoMode, Style, Event};
@@ -7,37 +8,37 @@ use std::env::args;
 #[allow(non_snake_case)]
 
 
-
 mod board;
 mod game;
 mod pieces;
-mod recourses;
+mod resources;
 mod square;
-mod piece_creator;
-mod index;
+mod new_piece_creator;
 mod color;
 mod utility;
+mod recorder;
+mod new_index;
 
-use index::Index;
+mod mov_functions;
 
+use new_index::*;
 use game::{Game, init_recourse};
-use recourses::Recourses;
-
+use resources::Resources;
 
 const DEFAULT_DIMENTIONS: (u32, u32) = (500, 500);
+pub type KEY = _Index<color::Color>;
+
 
 fn main() 
 {
-     /*
-     * Set dimentions to args, if any
-     */
     let size = size_args_or_default(DEFAULT_DIMENTIONS);
     let mut window = init_window(size);    
     
-    let mut res: Recourses<Index> = Recourses::new();
+    let mut res: Resources<KEY> = Resources::new();
+    
     init_recourse(&mut res);
 
-    let mut game = Game::new(&mut res, &window);
+    let mut game = Game::new(&res, &window);
     
    
     while window.is_open()
@@ -59,7 +60,8 @@ fn main()
         window.clear(&Color::BLACK);
 
         game.update(&mut window);
-        
+        game.display(&mut window);
+
         window.display();
 
     }

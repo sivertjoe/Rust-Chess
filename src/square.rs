@@ -1,16 +1,39 @@
-#[derive(PartialEq, Eq, Hash)]
+extern crate num;
+use self::num::ToPrimitive;
+
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Square
 {
     pub row: u8,
     pub col: u8,
 }
 
+
+// col is the file, 0 means a files etc.
+// row is number 
+// col: 5, row: 4 = e4
 #[allow(dead_code)]
 impl Square
 {
     pub fn new(col: u8, row: u8) -> Square
     {
         Square { col: col, row: row }
+    }
+    pub fn set<T, V>(&mut self, col: T, row: V) 
+        where T: ToPrimitive,
+              V: ToPrimitive
+    {
+        self.col = col.to_u8().expect("Error while setting square (1)");
+        self.row = row.to_u8().expect("Error while setting square (2)");
+    }
+
+    pub fn inc<T, V>(&mut self, col: T, row: V) 
+        where T: ToPrimitive,
+              V: ToPrimitive
+    {
+        self.col =( self.col as i32 + col.to_i32().expect("!1!") ) as u8;
+        self.row =( self.row as i32 + row.to_i32().expect("!2!") ) as u8;
     }
 }
 
@@ -28,7 +51,7 @@ impl std::fmt::Display for Square
             5 => 'f',
             6 => 'g',
             7 => 'h',
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         let pos = 8 - self.row;

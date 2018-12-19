@@ -6,3 +6,4 @@ authors = ["JoeyJo <sivert-joh@hotmail.com>"]
 [dependencies]
 sfml = "0.14.0"
 futures = "0.1.25"
+num = "0.2.0"

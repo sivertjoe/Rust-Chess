@@ -4,19 +4,19 @@ use sfml::graphics::Texture;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-pub struct Recourses<K>
+pub struct Resources<K>
 {
     textures: HashMap<K, Texture>,
 }
 
 
 #[allow(dead_code)]
-impl<K> Recourses<K>
+impl<K> Resources<K>
 where K: Hash + Eq,
 {
-    pub fn new() -> Recourses<K>
+    pub fn new() -> Resources<K>
     {
-        Recourses {
+        Resources {
             textures: HashMap::new(),
         }
     }

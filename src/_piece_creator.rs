@@ -15,7 +15,13 @@ use recourses::Recourses;
 extern crate sfml;
 use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
 use sfml::system::Vector2f;
+use recorder::ChessUtility;
 
+
+pub fn test_func(util: &ChessUtility)
+{
+
+}
 
 fn _create_piece<'a>(p: Box<ChessPiece>, color: Color) -> FutureResult<Piece<'a>, ()>
 {
@@ -261,8 +267,7 @@ pub fn create_king<'a>(map: HashMap<Square, Piece<'a>>, res: &'a Recourses<Index
 
 
 use sfml::graphics::Sprite;
-pub fn create_board<'a>(res: &'a Recourses<Index>, window: &RenderWindow) 
--> (Sprite<'a>, f32)
+pub fn create_board<'a>(res: &'a Recourses<Index>, window: &RenderWindow) -> (Sprite<'a>, f32)
 {
     let mut board = Sprite::new();
     let mut board_scale = 1.0;        
