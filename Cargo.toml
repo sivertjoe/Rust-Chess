@@ -7,3 +7,4 @@ authors = ["JoeyJo <sivert-joh@hotmail.com>"]
 sfml = "0.14.0"
 futures = "0.1.25"
 num = "0.2.0"
+regex = "1.1.0" 

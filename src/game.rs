@@ -71,9 +71,11 @@ impl<'a> TempMove<'a>
 pub struct Game<'a>
 {
     pub hold_mouse: bool,
-    pressed_key: bool,
+    pressed_left: bool,
+    pressed_right: bool,
     temp_move: TempMove<'a>,
-    recorder: Recorder<'a> 
+    pub recorder: Recorder<'a>,
+    turn: Color,
 }
 
 impl<'a> Game<'a>
@@ -82,9 +84,11 @@ impl<'a> Game<'a>
     {
         Game {
             hold_mouse: false,
-            pressed_key: false,
+            pressed_left: false,
+            pressed_right: false,
             temp_move: TempMove::new(),
-            recorder: Recorder::new(res, window)
+            recorder: Recorder::new(res, window),
+            turn: Color::White,
         }
     }
     
@@ -109,20 +113,7 @@ impl<'a> Game<'a>
             }
             else
             {
-                let mut piece = self.temp_move.piece.take().unwrap();
-                if self.evaluate_move(&mut piece, window)
-                {
-                    let square = utility::get_square(window);
-                    let mov = self.construct_move(&piece, square.clone());
-                    self.recorder.record( mov );
-                    self.recorder.place( piece, square );
-                }
-                else
-                {
-                    let square = self.temp_move.take_square().unwrap();
-                    self.recorder.place( piece, square );
-                }
-                
+                self.evaluate_move(window);
             }
 
         }
@@ -131,40 +122,106 @@ impl<'a> Game<'a>
             let square = utility::get_square(window);
             self.temp_move.set( self.recorder.get_board().remove(&square), Some(square) );
         }
+
+        self.handle_input();
+    }
+
+    fn evaluate_move(&mut self, window: &mut RenderWindow)
+    {
+        let mut piece = self.temp_move.piece.take().unwrap();
+        if self.legal_move(&mut piece, window)
+        {
+            let square = utility::get_square(window);
+            self.recorder.record( self.construct_move(&piece, square.clone()));
+            let _type = piece.get_type();
+            self.recorder.place( piece, square);
+           
+            if !self.check(&self.turn)
+            {
+                match _type
+                {
+                    _Index::King(_) =>
+                    {
+                        self.recorder._board().update_king(
+                            &self.turn, 
+                            self.temp_move.square().unwrap());
+                    }
+                    _ => {},
+                };
+                self.turn = !self.turn.clone()
+            }
+            else
+            {
+                self.recorder._undo();
+            }
+        }
+        else
+        {
+            self.place_back(piece);
+        }
+        
+    }
+
+    fn place_back(&mut self, piece: Piece<'a>)
+    {
+    
+        let square = self.temp_move.take_square().unwrap();
+        self.recorder.place( piece, square );
+    }
+    fn handle_input(&mut self)
+    {
+    
         use sfml::window::Key;
-        if Key::Left.is_pressed() && !self.pressed_key
+        if Key::Left.is_pressed() && !self.pressed_left
         {
             self.recorder.undo(); 
-            self.pressed_key = true;
+            self.turn = !self.turn.clone();
+            self.pressed_left = true;
         }
         else if !Key::Left.is_pressed() 
         {
-            self.pressed_key = false;
+            self.pressed_left = false;
+        }
+
+        if Key::Right.is_pressed() && !self.pressed_right
+        {
+            self.recorder.redo(); 
+            self.turn = !self.turn.clone();
+            self.pressed_right = true;
+        }
+        else if !Key::Right.is_pressed() 
+        {
+            self.pressed_right = false;
         }
     }
 
     fn construct_move(&self, piece: &Piece<'a>, to: Square) -> Move
     {
-        utility::construct_move(&piece, 
-                                self.recorder.board(),
-                                to, // to
-                                self.temp_move.square().unwrap().clone() //from
-                                )
+        utility::construct_move(
+            &piece, 
+            self.recorder.board(),
+            to,
+            self.temp_move.square().unwrap().clone() //from
+            )
     }
     fn move_piece(&mut self, window: &mut RenderWindow)
     {
         self.temp_move.as_mut().unwrap().sprite.set_position( utility::get_mousemid(window) );
     }
 
-    fn evaluate_move(&mut self, piece: &mut Piece<'a>, window: &mut RenderWindow) -> bool
+    fn legal_move(&mut self, piece: &mut Piece<'a>, window: &mut RenderWindow) -> bool
     {
         use self::futures::prelude::*;
+        if piece.color() != &self.turn
+        {
+            return false;
+        }
         // mutable incase en passant
         let mut en_passant_square: Option<Square> = None;
         match piece.try_move(
-                          &mut self.recorder, 
-                          self.temp_move.square().unwrap(), 
-                          &utility::get_square(window)).poll()
+            &self.recorder, 
+            self.temp_move.square().unwrap(), 
+            &utility::get_square(window)).poll()
         {
             Err(_) => return false,
             Ok(Async::Ready(s)) => {en_passant_square = s;} 
@@ -176,6 +233,24 @@ impl<'a> Game<'a>
             self.recorder.get_board().remove(&s);
         }
         true
+    }
+
+    fn check(&self, color: &Color) -> bool
+    {
+        let ns = self.recorder.ref_board().get_king(color);
+
+        self.recorder.board().iter().find(|(s, p)|
+        {
+            use self::futures::prelude::*;
+            match p.try_move(&self.recorder, s, ns).poll()
+            {
+                Ok(Async::Ready(_)) => 
+                {
+                    color == !&self.turn
+                },
+                _ => false,
+            }
+        }).is_some()
     }
     
 }

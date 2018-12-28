@@ -6,7 +6,7 @@ use pieces::{Piece};
 use board::Board;
 use resources::Resources;
 extern crate sfml;
-use sfml::graphics::{RenderWindow, Transformable}; 
+use sfml::graphics::{RenderWindow, Transformable};
 use sfml::system::Vector2u;
 use std::collections::HashMap;
 
@@ -25,6 +25,7 @@ pub trait ChessSet<'a>
     fn record(&mut self, Move);
     fn get(&self, usize) -> Option<&Move>;
     fn undo(&mut self);
+    fn redo(&mut self);
 
     // Utility
     fn init(&mut self);
@@ -47,50 +48,34 @@ impl<'a> ChessSet<'a> for Recorder<'a>
 
     fn record(&mut self, m: Move)
     {
+        if !self.move_buffer.contains(&m)
+        {
+            self.move_buffer.clear();
+        }
+        else if self.move_buffer.len() != 0
+        {
+            self.move_buffer.pop();
+        }
         self.moves.push(m);
+    }
+
+    fn redo(&mut self)
+    {
+        if let Some(saved_move) = self.move_buffer.pop()
+        {
+            let board = self.get_board();
+            let piece = board.remove(saved_move.from()).unwrap();
+
+            self._place(piece, saved_move.to().clone());
+            self.moves.push(saved_move);
+        }
     }
 
     fn undo(&mut self)
     {
-        if self.moves.last().is_none()
+        if let Some(last_move) = self._undo()
         {
-            return;
-        }
-        let last_move = self.moves.pop().unwrap();
-
-        
-        match &last_move.piece
-        {
-            &_Index::Pawn(_) => 
-            {                                                          // col
-                if utility::square_diff(last_move.to(), last_move.from()).0  != 0
-                {
-                    let prev_move = self.moves.last().unwrap();
-                    let diff_row = utility::square_diff(prev_move.to(), prev_move.from()).1;
-                    if diff_row.abs() == 2
-                    {
-                        use new_piece_creator::*;
-                        let (index, square) = calculate_en_passant(&last_move);
-                        let piece = m_create_piece(self.resorces, self.board.scale(), &index);  
-                        self._place(piece, square);
-                    }
-                }
-            }
-            _ => {},
-        };
-
-        let board = self.board.get_board(); 
-        let piece = board.remove(last_move.to()).unwrap();
-
-        self._place(piece, last_move.from().clone());
-        
-        if last_move.capture.is_some()
-        {
-            use new_piece_creator::*;
-            let captured_piece = m_create_piece(self.resorces,
-                                                 self.board.scale(), 
-                                                 last_move.capture.as_ref().unwrap());  
-            self._place(captured_piece, last_move.to().clone());
+            self.move_buffer.push(last_move);
         }
     }
 
@@ -98,12 +83,13 @@ impl<'a> ChessSet<'a> for Recorder<'a>
     fn init(&mut self)
     {
         use new_piece_creator::*;
-        m_create_kings(self);
         m_create_queens(self);
         m_create_rooks(self);
         m_create_knights(self);
         m_create_bishop(self);
         m_create_pawns(self); 
+        m_create_kings(self);
+
     }
     fn resource(&self) -> &'a Resources<KEY>
     {
@@ -126,23 +112,40 @@ impl<'a> ChessSet<'a> for Recorder<'a>
 
 }
 
-
-fn calculate_en_passant(mov: &Move) -> (_Index<Color>, Square)
+fn handle_en_passant(rec: &mut Recorder, last_move: &Move)
 {
-    let color = mov.piece.get();
-    let mask_color = match &color
+    match last_move.piece()
     {
-        &Color::White => 1,
-        _ => -1,
+        &_Index::Pawn(_) => 
+        {                                                          // col
+            if utility::square_diff(last_move.to(), last_move.from()).0  != 0
+            {
+                let prev_move = rec.moves.last().unwrap();
+                let diff_row = utility::square_diff(prev_move.to(), prev_move.from()).1;
+                let en_passant_square = match last_move.piece.get()
+                {
+                    Color::White => 3,
+                    _ => 4,
+                };
+                if diff_row.abs() == 2 && last_move.from().row == en_passant_square
+                {
+                    use new_piece_creator::*;
+                    let (index, square) = utility::calculate_en_passant(&last_move);
+                    let piece = m_create_piece(rec.resorces, rec.board.scale(), &index);  
+                    rec._place(piece, square);
+                }
+            }
+        }
+        _ => {},
     };
-    let mut square = mov.to().clone();
-    square.inc(0, mask_color);
-    (_Index::Pawn(!color), square)
 }
+
 
 pub struct Recorder<'a>
 {
     moves: Vec<Move>,
+    move_buffer: Vec<Move>,
+
     resorces: &'a Resources<KEY>,
     board: Board<'a>,
 }
@@ -153,6 +156,7 @@ impl<'a> Recorder<'a>
     {
         let mut recorder = Recorder {
             moves: Vec::new(),
+            move_buffer: Vec::new(),
             resorces: res,
             board: Board::new(res, window),
         };
@@ -160,6 +164,26 @@ impl<'a> Recorder<'a>
         recorder.init();
         recorder
 
+    }
+
+    pub fn n_moves(&self) -> usize
+    {
+        self.moves.len()
+    }
+    pub fn set_moves(&mut self, vec: Vec<Move>)
+    {
+        self.moves = vec;
+        self.move_buffer.clear();
+    }
+
+    pub fn _board(&mut self) -> &mut Board<'a>
+    {
+        &mut self.board
+    }
+
+    pub fn ref_board(&self) -> &Board<'a>
+    {
+        &self.board
     }
 
     pub fn display(&self, window: &mut RenderWindow)
@@ -184,9 +208,36 @@ impl<'a> Recorder<'a>
         self.board.place(p, s);
     }
 
+    pub fn _undo(&mut self) -> Option<Move>
+    {
+        if self.moves.last().is_none()
+        {
+            return None;
+        }
+        let last_move = self.moves.pop().unwrap();
+
+        let board = self.board.get_board(); 
+        let piece = board.remove(last_move.to()).unwrap();
+
+        self._place(piece, last_move.from().clone());
+        
+        if last_move.capture.is_some()
+        {
+            use new_piece_creator::*;
+            let cap = last_move.capture.as_ref().unwrap();
+            let captured_piece = m_create_piece(self.resorces, self.board.scale(), cap);
+
+            self._place(captured_piece, last_move.to().clone());
+        }
+        handle_en_passant(self, &last_move);
+        Some(last_move)
+    }
+    
+
 }
 
 #[allow(dead_code)]
+#[derive(PartialEq, Eq)]
 pub struct Move
 {
     piece: _Index<Color>,
@@ -213,6 +264,10 @@ impl Move
             from: from,
             capture: capture
         }
+    }
+    pub fn piece(&self) -> &_Index<Color>
+    {
+        &self.piece
     }
 
     pub fn get_type(&self) -> _Index<Color>
@@ -261,18 +316,48 @@ impl std::fmt::Display for Move
 {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result
     {
-        let capture = match &self.capture { Some(_) => "x", _ => "" };
-        let _type = 
-        if capture == "x" 
+        let text: String = match &self.piece
         {
-            self.get_capture()         
-        }
-        else
-        {
-            self.get_move()
-        };
+            &_Index::Pawn(ref v) => 
+            {
+                let diff = utility::square_diff(&self.to, &self.from);
+                if diff.0 != 0
+                {
+                    // Implying capture
+                    let mut letter = format!("{}", self.from);
+                    letter.pop();
+                    format!("{}x{}", letter, self.to)
+                }
+                else
+                {
+                    format!("{}", self.to) 
+                }
+            }
+            
+            &_Index::Rook(_) | &_Index::Knight(_) =>
+            {
+                let takes = match self.capture
+                {
+                    Some(_) => "x",
+                    _ => ""
+                };
 
-        let final_square = format!("{}", &self.to);
-        write!(fmt, "{}{}{}", _type, capture, final_square)
+                let letter = self.get_move();
+                format!("{}{}{}{}", letter, self.from, takes, self.to)
+            }
+
+
+            _ => 
+            {
+                let letter = self.get_move();
+                let takes = match self.capture
+                {
+                    Some(_) => "x",
+                    _ => "",
+                };
+                format!("{}{}{}", letter, takes, self.to)
+            }
+        };
+        write!(fmt, "{}", text)
     }
 }

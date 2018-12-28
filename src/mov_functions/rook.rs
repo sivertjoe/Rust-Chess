@@ -8,7 +8,7 @@ use recorder::Recorder;
 use color::Color;
 
 pub fn mov(
-        rec: &mut Recorder,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
         color: Color,
@@ -18,7 +18,7 @@ pub fn mov(
         
     if dsquare.0 == 0 && dsquare.1 == 0
     {
-        return future::ok(None);
+        return future::err(());
     }
 
     if dsquare.0 != 0 && dsquare.1 != 0
@@ -51,7 +51,7 @@ pub fn mov(
     {
         if let Some(piece) = rec.board().get(&temp_square)
         {
-            if &piece.color == !&color
+            if &piece.color == !&color && &temp_square == new_square
             {
                 return future::ok(None);
             }

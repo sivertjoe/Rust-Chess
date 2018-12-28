@@ -3,7 +3,7 @@ extern crate sfml;
 
 use sfml::window::{VideoMode, Style, Event};
 use sfml::window::mouse::Button;
-use sfml::graphics::{RenderWindow, RenderTarget, Color};
+use sfml::graphics::{RenderWindow};
 use std::env::args;
 #[allow(non_snake_case)]
 
@@ -19,15 +19,17 @@ mod utility;
 mod recorder;
 mod new_index;
 
+mod constructor;
 mod mov_functions;
+mod input;
 
 use new_index::*;
 use game::{Game, init_recourse};
 use resources::Resources;
+use input::Input;
 
 const DEFAULT_DIMENTIONS: (u32, u32) = (500, 500);
 pub type KEY = _Index<color::Color>;
-
 
 fn main() 
 {
@@ -35,12 +37,14 @@ fn main()
     let mut window = init_window(size);    
     
     let mut res: Resources<KEY> = Resources::new();
-    
     init_recourse(&mut res);
 
     let mut game = Game::new(&res, &window);
-    
    
+    let mut input = Input::new();
+    input.init();
+
+
     while window.is_open()
     {
         for event in window.poll_event()
@@ -54,20 +58,18 @@ fn main()
                 
                 Event::MouseButtonPressed{ button: Button::Left, .. } => 
                     game.hold_mouse = true,
+
                 _ => {},
             };
         }
-        window.clear(&Color::BLACK);
+        input.update(&mut game);
 
         game.update(&mut window);
         game.display(&mut window);
 
         window.display();
-
     }
-
 }
-
 
 fn init_window(size: (u32, u32)) -> RenderWindow
 {

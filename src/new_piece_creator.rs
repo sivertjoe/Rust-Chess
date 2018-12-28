@@ -18,13 +18,13 @@ use recorder::ChessSet;
 use new_index::*;
 use KEY;
 
-pub fn m_create_kings(set: &mut ChessSet)
+pub fn m_create_kings<'a>(set: &mut ChessSet)
 {
     p_create_king(set, _Index::King(Color::White));
     p_create_king(set, _Index::King(Color::Black));
 }
 
-pub fn p_create_king(set: &mut ChessSet, text: _Index<Color>)
+pub fn p_create_king<'a>(set: &mut ChessSet, text: _Index<Color>)
 {
     let color = text.get();
     let square = match &color { &Color::White => Square::new(4, 7), _ => Square::new(4, 0) };

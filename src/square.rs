@@ -35,6 +35,27 @@ impl Square
         self.col =( self.col as i32 + col.to_i32().expect("!1!") ) as u8;
         self.row =( self.row as i32 + row.to_i32().expect("!2!") ) as u8;
     }
+
+    pub fn from_str(square: &str) -> Square
+    {
+        let mut iter = square.chars();
+        let col = match iter.next().unwrap()
+        {
+            'a' => 0, 
+            'b' => 1, 
+            'c' => 2, 
+            'd' => 3, 
+            'e' => 4, 
+            'f' => 5, 
+            'g' => 6, 
+            'h' => 7,
+            _ => unreachable!()
+        };
+
+        let row: u8 = iter.next().unwrap() as u8;
+
+        Square::new(col, row)
+    }
 }
 
 impl std::fmt::Display for Square

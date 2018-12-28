@@ -9,8 +9,8 @@ use recorder::{Recorder, ChessSet};
 use color::Color;
 
 pub fn mov(
-        _chess_piece: &mut Pawn,
-        rec: &mut Recorder,
+        _chess_piece: &Pawn,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
         color: Color,

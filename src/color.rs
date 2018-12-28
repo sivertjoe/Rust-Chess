@@ -29,3 +29,4 @@ impl std::ops::Not for &Color
         }
     }
 }
+

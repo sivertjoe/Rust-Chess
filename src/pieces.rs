@@ -42,8 +42,8 @@ impl<'a> Piece<'a> {
     }
 
     pub fn try_move(
-        &mut self,
-        rec: &mut Recorder,
+        &self,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
     ) -> FutureResult<Option<Square>, ()> 
@@ -65,8 +65,8 @@ use square::Square;
 pub trait ChessPiece 
 {
     fn mov<'a>(
-        &mut self,
-        rec: &mut Recorder,
+        &self,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
         color: Color,
@@ -81,8 +81,8 @@ pub trait ChessPiece
     }
 }
 
+#[derive(PartialEq)]
 pub struct Pawn;
-
 impl Pawn 
 {
     pub fn new() -> Box<ChessPiece> 
@@ -93,8 +93,8 @@ impl Pawn
 impl ChessPiece for Pawn 
 {
     fn mov<'a>(
-        &mut self,
-        rec: &mut Recorder,
+        &self,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
         color: Color,
@@ -111,6 +111,7 @@ impl ChessPiece for Pawn
 
 }
 
+#[derive(PartialEq)]
 pub struct Rook;
 impl Rook 
 {
@@ -127,8 +128,8 @@ impl ChessPiece for Rook
         _Index::Rook(c.clone())
     }
     fn mov<'a>(
-        &mut self,
-        rec: &mut Recorder,
+        &self,
+        rec: &Recorder,
         curr_square: &Square,
         new_square: &Square,
         color: Color,
@@ -139,6 +140,7 @@ impl ChessPiece for Rook
     }
 }
 
+#[derive(PartialEq)]
 pub struct Knight;
 impl Knight 
 {
@@ -156,6 +158,7 @@ impl ChessPiece for Knight
     }
 }
 
+#[derive(PartialEq)]
 pub struct Bishop;
 impl Bishop 
 {
@@ -173,6 +176,7 @@ impl ChessPiece for Bishop
     }
 }
 
+#[derive(PartialEq)]
 pub struct King;
 impl King 
 {
@@ -189,8 +193,20 @@ impl ChessPiece for King
     {
         _Index::King(c.clone())
     }
+    fn mov<'a>(
+        &self,
+        rec: &Recorder,
+        curr_square: &Square,
+        new_square: &Square,
+        color: Color,
+    ) -> FutureResult<Option<Square>, ()> 
+    {
+        use mov_functions::king;
+        king::mov(rec, curr_square, new_square, color)
+    }
 }
 
+#[derive(PartialEq)]
 pub struct Queen;
 impl Queen {
     pub fn new() -> Box<ChessPiece> 
