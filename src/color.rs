@@ -5,7 +5,8 @@ pub enum Color
     Black
 }
 
-impl std::ops::Not for Color
+use std::ops::Not;
+impl Not for Color
 {
     type Output = Self;
     fn not(self) -> Self::Output
@@ -17,7 +18,8 @@ impl std::ops::Not for Color
         }
     }
 }
-impl std::ops::Not for &Color
+
+impl<'a> Not for &'a Color
 {
     type Output = Self;
     fn not(self) -> Self::Output

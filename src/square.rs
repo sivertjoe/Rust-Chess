@@ -58,9 +58,10 @@ impl Square
     }
 }
 
-impl std::fmt::Display for Square
+use std::fmt;
+impl fmt::Display for Square
 {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result
     {
         let letter: char = match self.col
         {

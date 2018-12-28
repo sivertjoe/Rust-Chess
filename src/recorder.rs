@@ -311,10 +311,10 @@ impl Move
     }
 }
 
-
-impl std::fmt::Display for Move
+use std::fmt;
+impl fmt::Display for Move
 {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result
     {
         let text: String = match &self.piece
         {
