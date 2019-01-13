@@ -70,6 +70,16 @@ impl Input
                     self.import_game(_game, path);
                 }
             },
+
+            Some("nmoves") =>
+            {
+                println!("{}", _game.recorder.n_moves());
+            }
+
+            Some("nturn") => 
+            {
+                println!("{}", _game.recorder.n_moves() / 2);
+            }
             _ => return,
         }
     }
@@ -90,15 +100,24 @@ impl Input
         let mut content = String::new();
         file.read_to_string(&mut content).unwrap();
         
-        let pattern = r"([NBRQK]?[abcdefgh]?[12345678]?x?[abcdefg][12345678]\+?)";
+        let pattern = r"([NBRQK]?[abcdefgh]?[12345678]?x?[abcdefgh][12345678])|(O-O-?O?)";
         let regex = Regex::new(&pattern).unwrap();
         let mut moves = Vec::new();
         
         let mut constructor = Constructor::new();
-
+        
+        let mut num = 0;
+        use color::Color;   
         for cap in regex.captures_iter(&content)
         {
-            moves.push(constructor.parse_move(&cap[0]));    
+            let color = match num % 2
+            {
+                0 => Color::White,
+                _ => Color::Black,
+            };
+            let mov = constructor.parse_move(&cap[0], color);
+            moves.push(mov);    
+            num += 1;
         }
    
         for _ in 0..game.recorder.n_moves()

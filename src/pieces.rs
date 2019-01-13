@@ -12,6 +12,9 @@ use sfml::system::Vector2f;
 use recorder::*;
 
 use new_index::*;
+
+unsafe impl<'a> Sync for Piece<'a>{}
+
 pub struct Piece<'a> 
 {
     pub sprite: Sprite<'a>,
@@ -48,7 +51,7 @@ impl<'a> Piece<'a> {
         new_square: &Square,
     ) -> FutureResult<Option<Square>, ()> 
     {
-        self.rule.mov(rec, curr_square, new_square, self.color.clone())
+        return self.rule.mov(rec, curr_square, new_square, self.color.clone());
     }
     
     pub fn get_type(&self) -> _Index<Color>
@@ -148,6 +151,7 @@ impl Knight
     {
         Box::new(Knight {})
     }
+
 }
 impl ChessPiece for Knight 
 {
@@ -155,6 +159,17 @@ impl ChessPiece for Knight
     fn get_type(&self, c: &Color) -> _Index<Color>
     {
         _Index::Knight(c.clone())
+    }
+    fn mov<'a>(
+        &self,
+        rec: &Recorder,
+        curr_square: &Square,
+        new_square: &Square,
+        color: Color,
+    ) -> FutureResult<Option<Square>, ()> 
+    {
+        use mov_functions::knight;
+        knight::mov(rec, curr_square, new_square, color)
     }
 }
 
@@ -173,6 +188,17 @@ impl ChessPiece for Bishop
     fn get_type(&self, c: &Color) -> _Index<Color>
     {
         _Index::Bishop(c.clone())
+    }
+    fn mov<'a>(
+        &self,
+        rec: &Recorder,
+        curr_square: &Square,
+        new_square: &Square,
+        color: Color,
+    ) -> FutureResult<Option<Square>, ()> 
+    {
+        use mov_functions::bishop;
+        bishop::mov(rec, curr_square, new_square, color)
     }
 }
 
@@ -220,5 +246,16 @@ impl ChessPiece for Queen
     fn get_type(&self, c: &Color) -> _Index<Color>
     {
         _Index::Queen(c.clone())
+    }
+    fn mov<'a>(
+        &self,
+        rec: &Recorder,
+        curr_square: &Square,
+        new_square: &Square,
+        color: Color,
+    ) -> FutureResult<Option<Square>, ()> 
+    {
+        use mov_functions::queen;
+        queen::mov(rec, curr_square, new_square, color)
     }
 }

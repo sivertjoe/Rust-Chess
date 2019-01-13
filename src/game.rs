@@ -2,6 +2,7 @@
 extern crate sfml;
 extern crate futures;
 
+
 use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
 use resources::Resources;
 use color::Color;
@@ -120,7 +121,7 @@ impl<'a> Game<'a>
         else if mouse::Button::Left.is_pressed()
         {
             let square = utility::get_square(window);
-            self.temp_move.set( self.recorder.get_board().remove(&square), Some(square) );
+            self.temp_move.set( self.recorder.board_mut().remove(&square), Some(square) );
         }
 
         self.handle_input();
@@ -134,25 +135,35 @@ impl<'a> Game<'a>
             let square = utility::get_square(window);
             self.recorder.record( self.construct_move(&piece, square.clone()));
             let _type = piece.get_type();
+
+            match _type
+            {
+                _Index::King(_) =>
+                {
+                    self.recorder._board().update_king(
+                        &self.turn, 
+                        &square)
+                }
+                _ => {},
+            };
             self.recorder.place( piece, square);
-           
             if !self.check(&self.turn)
             {
-                match _type
-                {
-                    _Index::King(_) =>
-                    {
-                        self.recorder._board().update_king(
-                            &self.turn, 
-                            self.temp_move.square().unwrap());
-                    }
-                    _ => {},
-                };
                 self.turn = !self.turn.clone()
             }
             else
             {
                 self.recorder._undo();
+            match _type
+            {
+                _Index::King(_) =>
+                {
+                    self.recorder._board().update_king(
+                        &self.turn, 
+                        self.temp_move.square().unwrap());
+                }
+                _ => {},
+            };
             }
         }
         else
@@ -217,20 +228,36 @@ impl<'a> Game<'a>
             return false;
         }
         // mutable incase en passant
-        let mut en_passant_square: Option<Square> = None;
+        let mut special_square: Option<Square> = None;
         match piece.try_move(
             &self.recorder, 
             self.temp_move.square().unwrap(), 
             &utility::get_square(window)).poll()
         {
             Err(_) => return false,
-            Ok(Async::Ready(s)) => {en_passant_square = s;} 
+            Ok(Async::Ready(s)) => {special_square = s;} 
             _ => {}
         };
 
-        if let Some(s) = en_passant_square
+        if let Some(s) = special_square
         {
-            self.recorder.get_board().remove(&s);
+            let p = self.recorder.board_mut().remove(&s).unwrap();
+            match p.get_type()
+            {
+                _Index::Pawn(_) => {}, // Drop it
+                _Index::Rook(_) => // Castle
+                {
+                    let square_col = match s.col
+                    {
+                        7 => 5,
+                        0 => 3,
+                        _ => unreachable!()
+                    };
+                    let square = Square::new(square_col, s.row);
+                    self.recorder.place(p, square);
+                }, 
+                _ => unreachable!()
+            }
         }
         true
     }
@@ -238,18 +265,16 @@ impl<'a> Game<'a>
     fn check(&self, color: &Color) -> bool
     {
         let ns = self.recorder.ref_board().get_king(color);
-
         self.recorder.board().iter().find(|(s, p)|
         {
             use self::futures::prelude::*;
+            if &p.color == color { return false; } 
             match p.try_move(&self.recorder, s, ns).poll()
             {
-                Ok(Async::Ready(_)) => 
-                {
-                    color == !&self.turn
-                },
+                Ok(Async::Ready(_)) => true, 
                 _ => false,
             }
+
         }).is_some()
     }
     

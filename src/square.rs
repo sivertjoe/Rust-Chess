@@ -2,7 +2,8 @@ extern crate num;
 use self::num::ToPrimitive;
 
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+unsafe impl Sync for Square{}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Square
 {
     pub row: u8,
@@ -16,9 +17,14 @@ pub struct Square
 #[allow(dead_code)]
 impl Square
 {
-    pub fn new(col: u8, row: u8) -> Square
+    pub fn new<T, U>(col: T, row: U) -> Square
+        where T: ToPrimitive,
+              U: ToPrimitive
     {
-        Square { col: col, row: row }
+        Square { 
+            col: col.to_u8().expect("Error while setting col"), 
+            row: row.to_u8().expect("Error while setting row")
+        }
     }
     pub fn set<T, V>(&mut self, col: T, row: V) 
         where T: ToPrimitive,
@@ -36,25 +42,14 @@ impl Square
         self.row =( self.row as i32 + row.to_i32().expect("!2!") ) as u8;
     }
 
-    pub fn from_str(square: &str) -> Square
+
+    pub fn from_nontation<'a, S: Into<&'a str>>(notation: S) -> Square
     {
-        let mut iter = square.chars();
-        let col = match iter.next().unwrap()
-        {
-            'a' => 0, 
-            'b' => 1, 
-            'c' => 2, 
-            'd' => 3, 
-            'e' => 4, 
-            'f' => 5, 
-            'g' => 6, 
-            'h' => 7,
-            _ => unreachable!()
-        };
+        let notation = notation.into().as_bytes();
+        let col = notation[0] - 97;
+        let row = 8 - (notation[1] - 48);
 
-        let row: u8 = iter.next().unwrap() as u8;
-
-        Square::new(col, row)
+        Self::new(col, row)
     }
 }
 
@@ -95,7 +90,12 @@ fn correct_square_display()
     assert_eq!("d8".to_owned(), format!("{}", d8));
 }
 
-
+#[test]
+fn from_str()
+{
+    let square = format!("{}", Square::new(5, 5));
+    assert_eq!("f3".to_owned(), square);
+}
 
 
 

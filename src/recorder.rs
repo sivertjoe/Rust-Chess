@@ -63,10 +63,48 @@ impl<'a> ChessSet<'a> for Recorder<'a>
     {
         if let Some(saved_move) = self.move_buffer.pop()
         {
-            let board = self.get_board();
+            let board = self.board_mut();
             let piece = board.remove(saved_move.from()).unwrap();
 
             self._place(piece, saved_move.to().clone());
+        
+            match saved_move.piece
+            {
+                _Index::Pawn(_) => 
+                {
+                    let diff = utility::square_diff(saved_move.to(), saved_move.from());
+                    if diff.0 != 0 && saved_move.capture == None
+                    {
+                        // En passant
+                        let color = saved_move.piece.get();
+                        let n = match &color { &Color::White => 1, _ => -1 };
+                        let mut en_passant_square = saved_move.to().clone();
+                        en_passant_square.set( en_passant_square.col, en_passant_square.row as isize + n);
+
+                        self.board_mut().remove(&en_passant_square);
+                    }
+                }
+
+                _Index::King(_) =>
+                {
+                    let diff = utility::square_diff( &saved_move.from, &saved_move.to );
+                    if diff.0 == -2 // Short castle
+                    {
+                        let mut rook_square = Square::new( 7, saved_move.to.row );
+                        let rook = self.board_mut().remove(&rook_square).unwrap();
+                        rook_square.col = 5;
+                        self._place(rook, rook_square);
+                    }
+                    if diff.0 == 2 // Long
+                    {
+                        let mut rook_square = Square::new( 0, saved_move.to.row );
+                        let rook = self.board_mut().remove(&rook_square).unwrap();
+                        rook_square.col = 3;
+                        self._place(rook, rook_square);
+                    }
+                }
+                _ => {},
+            };
             self.moves.push(saved_move);
         }
     }
@@ -170,11 +208,19 @@ impl<'a> Recorder<'a>
     {
         self.moves.len()
     }
+
+    pub fn move_buffer(&self) -> &Vec<Move>
+    {
+        &self.move_buffer
+    }
     pub fn set_moves(&mut self, vec: Vec<Move>)
     {
-        self.moves = vec;
-        self.move_buffer.clear();
+        self.moves.clear();
+        self.move_buffer.clear(); 
+        
+        self.move_buffer = vec.into_iter().rev().collect();
     }
+
 
     pub fn _board(&mut self) -> &mut Board<'a>
     {
@@ -191,9 +237,9 @@ impl<'a> Recorder<'a>
         self.board.display(window);
     }
 
-    pub fn get_board(&mut self) -> &mut HashMap<Square, Piece<'a>>
+    pub fn board_mut(&mut self) -> &mut HashMap<Square, Piece<'a>>
     {
-        self.board.get_board()
+        self.board.board_mut()
     }
 
     pub fn board(&self) -> &HashMap<Square, Piece<'a>>
@@ -216,7 +262,7 @@ impl<'a> Recorder<'a>
         }
         let last_move = self.moves.pop().unwrap();
 
-        let board = self.board.get_board(); 
+        let board = self.board.board_mut(); 
         let piece = board.remove(last_move.to()).unwrap();
 
         self._place(piece, last_move.from().clone());
@@ -230,22 +276,52 @@ impl<'a> Recorder<'a>
             self._place(captured_piece, last_move.to().clone());
         }
         handle_en_passant(self, &last_move);
+        handle_castle(self, &last_move);
         Some(last_move)
+    }
+
+    pub fn moves(&self) -> std::slice::Iter<Move>
+    {
+        self.moves.iter()
     }
     
 
 }
-
+fn handle_castle(rec: &mut Recorder, last_move: &Move)
+{
+    match last_move.piece
+    {
+        _Index::King(_) =>
+        {
+            let diff = utility::square_diff( &last_move.from, &last_move.to );
+            if diff.0 == -2 // From short castle
+            {
+                let mut rook_square = Square::new( 5, last_move.to.row );
+                let rook = rec.board_mut().remove(&rook_square).unwrap();
+                rook_square.col = 7;
+                rec._place(rook, rook_square);
+            }
+            if diff.0 == 2
+            {
+                let mut rook_square = Square::new( 3 , last_move.to.row );
+                let rook = rec.board_mut().remove(&rook_square).unwrap();
+                rook_square.col = 0;
+                rec._place(rook, rook_square);
+            }
+        }
+        _ => {}
+    }
+}
 #[allow(dead_code)]
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct Move
 {
-    piece: _Index<Color>,
+    pub piece: _Index<Color>,
     
-    to: Square,
-    from: Square,
+    pub to: Square,
+    pub from: Square,
 
-    capture: Option<_Index<Color>>,
+    pub capture: Option<_Index<Color>>,
 } 
 
 

@@ -1,5 +1,6 @@
-- implement Bishop, Knight, Queen, King mov function (ChessPiece)
-- Check for check after a move has been validated
-- Create undo function
-- Create re_do function / figure out what how to handle
-- Maybe more
+- Create Export function
+- Engine support
+- Arrows / color
+- Import, find generic rook is hella slow, 
+	create hashset to check for collison, yikes 
+	how to improve?

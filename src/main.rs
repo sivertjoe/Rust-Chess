@@ -31,6 +31,8 @@ use input::Input;
 const DEFAULT_DIMENTIONS: (u32, u32) = (500, 500);
 pub type KEY = _Index<color::Color>;
 
+
+
 fn main() 
 {
     let size = size_args_or_default(DEFAULT_DIMENTIONS);
@@ -43,6 +45,7 @@ fn main()
    
     let mut input = Input::new();
     input.init();
+
 
 
     while window.is_open()

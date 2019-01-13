@@ -60,7 +60,7 @@ impl<'a> Board<'a>
     {
         self.size
     }
-    pub fn get_board(&mut self) -> &mut HashMap<Square, Piece<'a>>
+    pub fn board_mut(&mut self) -> &mut HashMap<Square, Piece<'a>>
     {
         &mut self.squares
     }
