@@ -6,6 +6,7 @@ use square::Square;
 use color::Color;
 use new_index::_Index;
 
+// Get the square the mouse is hovering over
 pub fn get_square(window: &mut RenderWindow) -> Square 
 {
     let board_pos = mouse::desktop_position() - window.position();
@@ -97,3 +98,5 @@ pub fn calculate_en_passant(mov: &Move) -> (_Index<Color>, Square)
     square.inc(0, mask_color);
     (_Index::Pawn(!color), square)
 }
+
+

@@ -128,6 +128,8 @@ impl<'a> ChessSet<'a> for Recorder<'a>
         m_create_pawns(self); 
         m_create_kings(self);
 
+        self.board.set_kings();
+
     }
     fn resource(&self) -> &'a Resources<KEY>
     {
@@ -232,10 +234,6 @@ impl<'a> Recorder<'a>
         &self.board
     }
 
-    pub fn display(&self, window: &mut RenderWindow)
-    {
-        self.board.display(window);
-    }
 
     pub fn board_mut(&mut self) -> &mut HashMap<Square, Piece<'a>>
     {

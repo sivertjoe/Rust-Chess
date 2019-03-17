@@ -1,4 +1,4 @@
-#![feature(nll)]
+#![feature(nll, vec_remove_item)]
 extern crate sfml;
 
 use sfml::window::{VideoMode, Style, Event};
@@ -22,6 +22,7 @@ mod new_index;
 mod constructor;
 mod mov_functions;
 mod input;
+mod highlight;
 
 use new_index::*;
 use game::{Game, init_recourse};
@@ -60,8 +61,19 @@ fn main()
                     game.hold_mouse = false,
                 
                 Event::MouseButtonPressed{ button: Button::Left, .. } => 
-                    game.hold_mouse = true,
+                {
+                    game.hold_mouse = true;
+                    game.clear_squares();
+                }
 
+                Event::MouseButtonPressed { button: Button::Right, ..} =>
+                    game.push_square( utility::get_square(&mut window) ),
+
+                Event::MouseButtonReleased { button: Button::Right, ..} =>
+                {
+                    game.push_square( utility::get_square(&mut window) );
+                    game.eval_squares();
+                }
                 _ => {},
             };
         }

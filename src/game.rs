@@ -3,7 +3,8 @@ extern crate sfml;
 extern crate futures;
 
 
-use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
+use sfml::graphics::{RenderWindow, RenderTarget,  Transformable};
+use sfml::system::{ Vector2u};
 use resources::Resources;
 use color::Color;
 use recorder::{Recorder, ChessSet, Move};
@@ -12,6 +13,8 @@ use KEY;
 use new_index::*;
 use square::Square;
 use pieces::Piece;
+
+use highlight::Highlight;
 
 
 use utility;
@@ -77,6 +80,10 @@ pub struct Game<'a>
     temp_move: TempMove<'a>,
     pub recorder: Recorder<'a>,
     turn: Color,
+    input_square: Vec<Square>,
+
+
+    highlighed_squares: Vec<Highlight<'a>>,
 }
 
 impl<'a> Game<'a>
@@ -90,18 +97,72 @@ impl<'a> Game<'a>
             temp_move: TempMove::new(),
             recorder: Recorder::new(res, window),
             turn: Color::White,
+
+            input_square: Vec::new(),
+            highlighed_squares: Vec::new(),
         }
     }
-    
+
+    #[inline]
+    pub fn push_square(&mut self, square: Square)
+    {
+        self.input_square.push(square);
+    }
+
+    pub fn eval_squares(&mut self)
+    {
+        let s2 = self.input_square.pop().unwrap(); 
+        let s1 = self.input_square.pop().unwrap(); 
+
+
+        if s1 == s2
+        {
+            // change color
+
+            let highlight = Highlight::new(self.board_size(), &s1);
+
+            if self.highlighed_squares.remove_item(&highlight).is_none()
+            {
+                self.highlighed_squares.push(highlight);
+            }
+        }
+        else
+        {
+            // draw arrow
+        }
+    }
+
+    #[inline]
+    fn board_size(&self) -> Vector2u
+    {
+        self.recorder.ref_board().board_size()
+    }
+   
+
+    #[inline]
+    pub fn clear_squares(&mut self)
+    {
+        self.highlighed_squares.clear();
+    }
 
     pub fn display(&self, window: &mut RenderWindow)
     {
-        self.recorder.display(window);
+
+        self.recorder.ref_board().display_board(window);
+
+        self.highlighed_squares.iter().for_each(|s| // Sprite<'a>, red square
+        {
+            window.draw(s);
+        });
+
+        self.recorder.ref_board().display_pieces(window);
+        
         if self.temp_move.is_some()
         {
             window.draw( &self.temp_move.as_ref().unwrap().sprite );
         }
     }
+
 
     pub fn update(&mut self, window: &mut RenderWindow)
     {
@@ -135,18 +196,10 @@ impl<'a> Game<'a>
             let square = utility::get_square(window);
             self.recorder.record( self.construct_move(&piece, square.clone()));
             let _type = piece.get_type();
+            
+            self.handle_king_moves(&square, &_type);
 
-            match _type
-            {
-                _Index::King(_) =>
-                {
-                    self.recorder._board().update_king(
-                        &self.turn, 
-                        &square)
-                }
-                _ => {},
-            };
-            self.recorder.place( piece, square);
+            self.recorder.place( piece, square.clone());
             if !self.check(&self.turn)
             {
                 self.turn = !self.turn.clone()
@@ -154,16 +207,7 @@ impl<'a> Game<'a>
             else
             {
                 self.recorder._undo();
-            match _type
-            {
-                _Index::King(_) =>
-                {
-                    self.recorder._board().update_king(
-                        &self.turn, 
-                        self.temp_move.square().unwrap());
-                }
-                _ => {},
-            };
+                self.handle_king_moves(&square, &_type);
             }
         }
         else
@@ -173,9 +217,29 @@ impl<'a> Game<'a>
         
     }
 
+    #[inline]
+    fn handle_king_moves(&mut self, square: &Square, _type: &_Index<Color>)
+    {
+        match _type
+        {
+            &_Index::King(_) =>
+            {
+                self.update_kingpos(&square);
+            }
+            _ => {},
+        };
+    }
+    #[inline]
+    fn update_kingpos(&mut self, square: &Square)
+    {
+        self.recorder._board().update_king(
+            &self.turn, 
+            &square)
+    }
+
+    #[inline]
     fn place_back(&mut self, piece: Piece<'a>)
     {
-    
         let square = self.temp_move.take_square().unwrap();
         self.recorder.place( piece, square );
     }
@@ -206,6 +270,7 @@ impl<'a> Game<'a>
         }
     }
 
+    #[inline]
     fn construct_move(&self, piece: &Piece<'a>, to: Square) -> Move
     {
         utility::construct_move(
@@ -215,6 +280,8 @@ impl<'a> Game<'a>
             self.temp_move.square().unwrap().clone() //from
             )
     }
+
+    #[inline]
     fn move_piece(&mut self, window: &mut RenderWindow)
     {
         self.temp_move.as_mut().unwrap().sprite.set_position( utility::get_mousemid(window) );
@@ -227,12 +294,14 @@ impl<'a> Game<'a>
         {
             return false;
         }
-        // mutable incase en passant
         let mut special_square: Option<Square> = None;
-        match piece.try_move(
-            &self.recorder, 
-            self.temp_move.square().unwrap(), 
-            &utility::get_square(window)).poll()
+        
+        let res = piece.try_move(
+                            &self.recorder,
+                            self.temp_move.square().unwrap(),
+                            &utility::get_square(window)).poll();
+
+        match res 
         {
             Err(_) => return false,
             Ok(Async::Ready(s)) => {special_square = s;} 
@@ -241,25 +310,31 @@ impl<'a> Game<'a>
 
         if let Some(s) = special_square
         {
-            let p = self.recorder.board_mut().remove(&s).unwrap();
-            match p.get_type()
-            {
-                _Index::Pawn(_) => {}, // Drop it
-                _Index::Rook(_) => // Castle
-                {
-                    let square_col = match s.col
-                    {
-                        7 => 5,
-                        0 => 3,
-                        _ => unreachable!()
-                    };
-                    let square = Square::new(square_col, s.row);
-                    self.recorder.place(p, square);
-                }, 
-                _ => unreachable!()
-            }
+            self.handle_en_passant_castle(s)
         }
+
         true
+    }
+
+    fn handle_en_passant_castle(&mut self, s: Square)
+    {
+        let p = self.recorder.board_mut().remove(&s).unwrap();
+        match p.get_type()
+        {
+            _Index::Pawn(_) => {}, // Remove it
+            _Index::Rook(_) => // Castle
+            {
+                let square_col = match s.col
+                {
+                    7 => 5,
+                    0 => 3,
+                    _ => unreachable!()
+                };
+                let square = Square::new(square_col, s.row);
+                self.recorder.place(p, square);
+            }, 
+            _ => unreachable!()
+        }
     }
 
     fn check(&self, color: &Color) -> bool

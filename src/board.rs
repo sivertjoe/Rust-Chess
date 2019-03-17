@@ -18,6 +18,8 @@ pub struct Board<'a>
     scale: f32,
 
     kings: HashMap<Color, Square>,
+
+    //pub king_pos: HashMap<Color, Box<*const Piece<'a>>>
 }
 
 #[allow(dead_code)]
@@ -31,6 +33,8 @@ impl<'a> Board<'a>
         let mut set = HashMap::new();
         set.insert(Color::White, pos.0);
         set.insert(Color::Black, pos.1);
+        
+
         Board {
             squares: HashMap::new(),
             board: board,
@@ -38,47 +42,73 @@ impl<'a> Board<'a>
             scale: scale,
 
             kings: set,
+            //king_pos: HashMap::new(),
         }
     }
 
-    pub fn display(&self, window: &mut RenderWindow)
+
+    #[inline]
+    pub fn display_board(&self, window: &mut RenderWindow)
     {
         window.draw(&self.board);
+    }
+    #[inline]
+    pub fn display_pieces(&self, window: &mut RenderWindow)
+    {
         self.squares.values().for_each(|p| window.draw(&p.sprite))
     }
 
+    #[inline]
     pub fn place(&mut self, p: Piece<'a>, s: Square)
     {
         self.squares.insert(s, p);
     }
 
+    #[inline]
     pub fn scale(&self) -> f32
     {
         self.scale
     }
+    #[inline]
     pub fn board_size(&self) -> Vector2u
     {
         self.size
     }
+    #[inline]
     pub fn board_mut(&mut self) -> &mut HashMap<Square, Piece<'a>>
     {
         &mut self.squares
     }
     
+    #[inline]
     pub fn board(&self) -> &HashMap<Square, Piece<'a>>
     {
         &self.squares
     }
 
-    pub fn set_king(&mut self, color: Color, square: Square)
+    #[inline]
+    pub fn set_kings(&mut self)
     {
-        self.kings.insert(color, square);
+        /*let pos = (Square::new(4, 7), Square::new(4, 0));
+
+        let wking = self.squares.remove(&pos.0).unwrap();
+        let king_pointer: *const Piece= &wking;
+        self.king_pos.insert(Color::White, Box::new(king_pointer));
+
+        let bking = self.squares.remove(&pos.1).unwrap();
+        let king_pointer: *const Piece= &wking;
+        self.king_pos.insert(Color::Black, king_pointer);
+
+        self.squares.insert(pos.0, wking);
+        self.squares.insert(pos.1, bking);*/
     }
+    #[inline]
     pub fn update_king(&mut self, c: &Color, new_pos: &Square)
     {
         self.kings.get_mut(c).unwrap().set(new_pos.col, new_pos.row);
     }
 
+    #[inline]
     pub fn get_king(&self, color: &Color) -> &Square
     {
         self.kings.get(color).unwrap()
