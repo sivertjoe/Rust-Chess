@@ -106,6 +106,7 @@ impl<'a> Game<'a>
     #[inline]
     pub fn push_square(&mut self, square: Square)
     {
+        println!("{}", square);
         self.input_square.push(square);
     }
 

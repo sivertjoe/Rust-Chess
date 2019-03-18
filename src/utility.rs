@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use sfml::graphics::{RenderTarget, RenderWindow};
 use sfml::system::{Vector2f, Vector2u};
-use sfml::window::mouse;
 use square::Square;
 use color::Color;
 use new_index::_Index;
@@ -9,33 +8,25 @@ use new_index::_Index;
 // Get the square the mouse is hovering over
 pub fn get_square(window: &mut RenderWindow) -> Square 
 {
-    let board_pos = mouse::desktop_position() - window.position();
-
+    let mp = window.mouse_position();
     let square_size = window.size().y as i32 / 8;
 
-    let row = (board_pos.x / square_size) as u8;
-    let col = (board_pos.y / square_size) as u8;
+    let row = (mp.x / square_size) as u8;
+    let col = (mp.y / square_size) as u8;
+
+
 
     Square::new(row, col)
 }
-pub fn _square_from_vec(v: &Vector2f, window_size: &Vector2u) -> Square
-{
-    let board_pos = v;
-    let square_size = window_size.y as i32 / 8;
 
-    let row = (board_pos.x / square_size as f32) as u8;
-    let col = (board_pos.y / square_size as f32) as u8;
-
-    Square::new(row, col)
-}
 
 pub fn get_square_from_vec(v: &Vector2f, window: &mut RenderWindow) -> Square 
 {
     let board_pos = v;
     let square_size = window.size().y as i32 / 8;
 
-    let row = (board_pos.x / square_size as f32) as u8;
-    let col = (board_pos.y / square_size as f32) as u8;
+    let row = (board_pos.x / square_size as f32).ceil() as u8;
+    let col = (board_pos.y / square_size as f32).ceil() as u8;
 
     Square::new(row, col)
 }
@@ -59,11 +50,6 @@ pub fn get_boardpos(size: &Vector2u, square: &Square) -> Vector2f
     )
 }
 
-pub fn get_mousesquare(window: &mut RenderWindow) -> Square 
-{
-    let mousepos = get_mousemid(window);
-    get_square_from_vec(&Vector2f::new(mousepos.x as f32, mousepos.y as f32), window)
-}
 use recorder::Move;
 use pieces::Piece;
 use std::collections::HashMap;
