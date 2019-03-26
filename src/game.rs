@@ -15,6 +15,7 @@ use square::Square;
 use pieces::Piece;
 
 use highlight::Highlight;
+use arrow::Arrow;
 
 
 use utility;
@@ -84,6 +85,7 @@ pub struct Game<'a>
 
 
     highlighed_squares: Vec<Highlight<'a>>,
+    arrows: Vec<Arrow<'a>>,
 }
 
 impl<'a> Game<'a>
@@ -100,13 +102,13 @@ impl<'a> Game<'a>
 
             input_square: Vec::new(),
             highlighed_squares: Vec::new(),
+            arrows: Vec::new(),
         }
     }
 
     #[inline]
     pub fn push_square(&mut self, square: Square)
     {
-        println!("{}", square);
         self.input_square.push(square);
     }
 
@@ -130,6 +132,7 @@ impl<'a> Game<'a>
         else
         {
             // draw arrow
+            self.arrows.push( Arrow::new(self.board_size(), &s1, &s2) );
         }
     }
 
@@ -157,6 +160,12 @@ impl<'a> Game<'a>
         });
 
         self.recorder.ref_board().display_pieces(window);
+
+
+        self.arrows.iter().for_each(|a| // Arrow
+        {
+            a.draw(window);
+        });
         
         if self.temp_move.is_some()
         {

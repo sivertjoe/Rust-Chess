@@ -23,6 +23,7 @@ mod constructor;
 mod mov_functions;
 mod input;
 mod highlight;
+mod arrow;
 
 use new_index::*;
 use game::{Game, init_recourse};
@@ -38,6 +39,7 @@ fn main()
 {
     let size = size_args_or_default(DEFAULT_DIMENTIONS);
     let mut window = init_window(size);    
+    window.set_vertical_sync_enabled(true);
     
     let mut res: Resources<KEY> = Resources::new();
     init_recourse(&mut res);
@@ -67,12 +69,14 @@ fn main()
                 }
 
                 Event::MouseButtonPressed { button: Button::Right, ..} =>
-                    game.push_square( utility::get_square(&mut window) ),
+                {
+                    //game.push_square( utility::get_square(&mut window) )
+                }
 
                 Event::MouseButtonReleased { button: Button::Right, ..} =>
                 {
-                    game.push_square( utility::get_square(&mut window) );
-                    game.eval_squares();
+                    //game.push_square( utility::get_square(&mut window) );
+                    //game.eval_squares();
                 }
                 _ => {},
             };
