@@ -66,17 +66,19 @@ fn main()
                 {
                     game.hold_mouse = true;
                     game.clear_squares();
+                    game.clear_arrows();
                 }
 
                 Event::MouseButtonPressed { button: Button::Right, ..} =>
                 {
-                    //game.push_square( utility::get_square(&mut window) )
+                    game.push_square( utility::get_square(&mut window) );
+                    dbg!("Down");
                 }
 
                 Event::MouseButtonReleased { button: Button::Right, ..} =>
                 {
-                    //game.push_square( utility::get_square(&mut window) );
-                    //game.eval_squares();
+                    game.push_square( utility::get_square(&mut window) );
+                    game.eval_squares();
                 }
                 _ => {},
             };

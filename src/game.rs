@@ -149,6 +149,11 @@ impl<'a> Game<'a>
         self.highlighed_squares.clear();
     }
 
+    pub fn clear_arrows(&mut self)
+    {
+        self.arrows.clear();
+    }
+
     pub fn display(&self, window: &mut RenderWindow)
     {
 

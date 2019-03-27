@@ -1,11 +1,12 @@
 use sfml::system::{ Vector2f, Vector2u};
-use sfml::graphics::{Transformable, Color, CustomShape, CustomShapePoints, RenderTarget, RenderWindow, Shape};
+use sfml::graphics::{Transformable, Color, CustomShape, CustomShapePoints, RectangleShape, RenderTarget, RenderWindow, Shape};
 use square::Square;
 
 use utility;
 
 pub struct Arrow<'a>
 {
+    rect: RectangleShape<'a>,
     shape: CustomShape<'a>,
 }
 
@@ -14,14 +15,27 @@ impl<'a> Arrow<'a>
 {
     pub fn new(board_size: Vector2u, from: &Square, to: &Square) -> Self
     {
-
         let ss = board_size.x / 8;
         let mut point1 = utility::get_boardpos(&board_size, to);
-        let diff = utility::get_boardpos(&board_size, from) - point1;
+        let from_point = utility::get_boardpos(&board_size, from);
+        let diff =  from_point - point1;
+
         point1.x += ss as f32 / 2.0;
         point1.y += ss as f32 / 2.0;
 
-        println!("{:?}", diff);
+
+        let length = (diff.x.powf(2.0) + diff.y.powf(2.0)).sqrt();
+        let size = Vector2f::new(length, ss as f32 / 4.0);
+
+        let mut rect = RectangleShape::with_size(size);
+        rect.set_fill_color(&sfml::graphics::Color::BLUE);
+        rect.set_position(point1);
+
+
+        let angle = utility::get_angle(to, from);
+        
+        rect.set_rotation(angle);
+
 
         let p1 =  point1;
         let p2 =  Vector2f::new(point1.x - 20., point1.y + 20.);
@@ -34,12 +48,14 @@ impl<'a> Arrow<'a>
 
         Arrow
         {
+            rect: rect,
             shape: shape
         }
     }
 
     pub fn draw(&self, window: &mut RenderWindow)
     {
+        window.draw(&self.rect);
         window.draw(&self.shape);
     }
 }
