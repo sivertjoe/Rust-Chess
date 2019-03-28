@@ -153,12 +153,13 @@ impl<'a> Game<'a>
             {
                 self.evaluate_move(window);
             }
-
         }
         else if mouse::Button::Left.is_pressed()
         {
             let square = utility::get_square(window);
-            self.temp_move.set( self.recorder.board_mut().remove(&square), Some(square) );
+            self.temp_move.set(
+                    self.recorder.get_piece(&square), 
+                    Some(square) );
         }
 
         self.handle_input(window);

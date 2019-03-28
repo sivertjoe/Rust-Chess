@@ -240,6 +240,12 @@ impl<'a> Recorder<'a>
         self.board.board_mut()
     }
 
+    #[inline]
+    pub fn get_piece(&mut self, square: &Square) -> Option<Piece<'a>>
+    {
+        self.board.get_piece(square)
+    }
+
     pub fn board(&self) -> &HashMap<Square, Piece<'a>>
     {
         self.board.board()

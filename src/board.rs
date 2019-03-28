@@ -45,7 +45,11 @@ impl<'a> Board<'a>
             //king_pos: HashMap::new(),
         }
     }
-
+    #[inline]
+    pub fn get_piece(&mut self, square: &Square) -> Option<Piece<'a>>
+    {
+        self.squares.remove(square)
+    }
 
     #[inline]
     pub fn display_board(&self, window: &mut RenderWindow)
