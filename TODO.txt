@@ -1,6 +1,5 @@
 - Create Export function
 - Engine support
-- Arrows / color
 - Import, find generic rook is hella slow, 
 	create hashset to check for collison, yikes 
 	how to improve?

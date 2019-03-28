@@ -2,7 +2,6 @@
 extern crate sfml;
 
 use sfml::window::{VideoMode, Style, Event};
-use sfml::window::mouse::Button;
 use sfml::graphics::{RenderWindow};
 use std::env::args;
 #[allow(non_snake_case)]
@@ -24,6 +23,7 @@ mod mov_functions;
 mod input;
 mod highlight;
 mod arrow;
+mod angle;
 
 use new_index::*;
 use game::{Game, init_recourse};
@@ -46,49 +46,33 @@ fn main()
 
     let mut game = Game::new(&res, &window);
    
-    let mut input = Input::new();
-    input.init();
+    let input = Input::new();
+    //input.init();
 
 
 
     while window.is_open()
     {
-        for event in window.poll_event()
-        {
-            match event
-            {
-                Event::Closed => window.close(),
-                
-                Event::MouseButtonReleased{ button: Button::Left, ..} =>
-                    game.hold_mouse = false,
-                
-                Event::MouseButtonPressed{ button: Button::Left, .. } => 
-                {
-                    game.hold_mouse = true;
-                    game.clear_squares();
-                    game.clear_arrows();
-                }
 
-                Event::MouseButtonPressed { button: Button::Right, ..} =>
-                {
-                    game.push_square( utility::get_square(&mut window) );
-                    dbg!("Down");
-                }
-
-                Event::MouseButtonReleased { button: Button::Right, ..} =>
-                {
-                    game.push_square( utility::get_square(&mut window) );
-                    game.eval_squares();
-                }
-                _ => {},
-            };
-        }
+        handle_events(&mut window);
         input.update(&mut game);
 
         game.update(&mut window);
         game.display(&mut window);
 
         window.display();
+    }
+}
+
+fn handle_events(window: &mut RenderWindow)
+{
+    for event in window.poll_event()
+    {
+        match event
+        {
+            Event::Closed => window.close(),
+            _ => {},
+        };
     }
 }
 

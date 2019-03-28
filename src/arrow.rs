@@ -1,8 +1,10 @@
 use sfml::system::{ Vector2f, Vector2u};
-use sfml::graphics::{Transformable, Color, CustomShape, CustomShapePoints, RectangleShape, RenderTarget, RenderWindow, Shape};
+use sfml::graphics::{Transformable, CustomShape, CustomShapePoints, RectangleShape, Shape};
 use square::Square;
+use sfml::graphics::Color;
 
 use utility;
+use angle;
 
 pub struct Arrow<'a>
 {
@@ -10,53 +12,84 @@ pub struct Arrow<'a>
     shape: CustomShape<'a>,
 }
 
-
 impl<'a> Arrow<'a>
 {
     pub fn new(board_size: Vector2u, from: &Square, to: &Square) -> Self
     {
-        let ss = board_size.x / 8;
-        let mut point1 = utility::get_boardpos(&board_size, to);
-        let from_point = utility::get_boardpos(&board_size, from);
-        let diff =  from_point - point1;
+        let color = sfml::graphics::Color::rgba(249, 212, 35, 230);
+        let angle = angle::get_angle(to, from);
 
-        point1.x += ss as f32 / 2.0;
-        point1.y += ss as f32 / 2.0;
-
-
-        let length = (diff.x.powf(2.0) + diff.y.powf(2.0)).sqrt();
-        let size = Vector2f::new(length, ss as f32 / 4.0);
-
-        let mut rect = RectangleShape::with_size(size);
-        rect.set_fill_color(&sfml::graphics::Color::BLUE);
-        rect.set_position(point1);
-
-
-        let angle = utility::get_angle(to, from);
-        
-        rect.set_rotation(angle);
-
-
-        let p1 =  point1;
-        let p2 =  Vector2f::new(point1.x - 20., point1.y + 20.);
-        let p3 =  Vector2f::new(point1.x + 20., point1.y + 20.);
-
-        let mut shape = CustomShape::new(Box::new(TriangleShape::new(p1, p2, p3)));
-        shape.set_fill_color(&sfml::graphics::Color::BLUE);
-        shape.set_outline_color(&sfml::graphics::Color::BLUE);
-        shape.set_outline_thickness(3.);
-
-        Arrow
-        {
-            rect: rect,
-            shape: shape
+        Arrow {
+            rect: create_rect(from, to, angle, &board_size, &color),
+            shape: create_triangle(to, angle, &board_size, &color)
         }
     }
+}
+fn create_triangle<'s>(to: &Square, angle: f32, board_size: &Vector2u, color: &Color) -> CustomShape<'s>
+{
+    let ss = board_size.x / 8;
+    let mut point1 = utility::get_boardpos(board_size, to);
+    point1.x += ss as f32 / 2.0;
+    point1.y += ss as f32 / 2.0;
+    
+    
+    let tsize = ss as f32 / 6.0;
+    
+    let p1 =  Vector2f::new(0.0, 0.0);
+    let p2 =  Vector2f::new(-tsize, tsize);
+    let p3 =  Vector2f::new(tsize, tsize);
 
-    pub fn draw(&self, window: &mut RenderWindow)
+    let mut shape = CustomShape::new(Box::new(TriangleShape::new(p1, p2, p3)));
+    shape.set_fill_color(color);
+    shape.set_outline_color(color);
+    shape.set_outline_thickness(ss as f32 / 12.0);
+
+    shape.set_position(point1);
+    shape.rotate(angle - 90.0);
+    shape
+}
+
+fn create_rect<'s>(from: &Square, to: &Square, angle: f32, board_size: &Vector2u, color: &Color) -> RectangleShape<'s>
+{
+    let mut point1 = utility::get_boardpos(board_size, to);
+    let mut from_point = utility::get_boardpos(board_size, from);
+    let diff =  from_point - point1;
+    
+    let ss = board_size.x / 8;
+
+    // Allign with center
+    point1.x += ss as f32 / 2.0;
+    point1.y += ss as f32 / 2.0;
+
+    // Allign with center
+    from_point.x += ss as f32 / 2.0;
+    from_point.y += ss as f32 / 2.0;
+
+
+    let length = (diff.x.powf(2.0) + diff.y.powf(2.0)).sqrt() - ss as f32 / 8.0;
+    let size = Vector2f::new(length, ss as f32 / 6.0);
+
+    let mut rect = RectangleShape::with_size(size);
+    rect.set_fill_color(&color);
+    rect.set_position(from_point);
+
+    // Set origin around center of square
+    rect.set_origin( Vector2f::new(0.0, rect.size().y / 2.0) );
+
+    rect.rotate(angle + 180.0);
+
+    return rect;
+}
+impl<'s> sfml::graphics::Drawable for Arrow<'s>
+{
+    fn draw<'a: 'shader, 'texture, 'shader, 'shader_texture>(
+        &'a self,
+        target: &mut sfml::graphics::RenderTarget,
+        states: sfml::graphics::RenderStates<'texture, 'shader, 'shader_texture>,
+        )
     {
-        window.draw(&self.rect);
-        window.draw(&self.shape);
+        target.draw(&self.shape);
+        target.draw_rectangle_shape(&self.rect, states);
     }
 }
 

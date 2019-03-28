@@ -84,6 +84,10 @@ pub struct Game<'a>
     input_square: Vec<Square>,
 
 
+    m1: bool,
+    m2: bool,
+
+
     highlighed_squares: Vec<Highlight<'a>>,
     arrows: Vec<Arrow<'a>>,
 }
@@ -99,6 +103,8 @@ impl<'a> Game<'a>
             temp_move: TempMove::new(),
             recorder: Recorder::new(res, window),
             turn: Color::White,
+            m1: false,
+            m2: false,
 
             input_square: Vec::new(),
             highlighed_squares: Vec::new(),
@@ -169,7 +175,7 @@ impl<'a> Game<'a>
 
         self.arrows.iter().for_each(|a| // Arrow
         {
-            a.draw(window);
+            window.draw(a);
         });
         
         if self.temp_move.is_some()
@@ -184,7 +190,7 @@ impl<'a> Game<'a>
         use sfml::window::mouse;
         if self.temp_move.is_some()
         {
-            if self.hold_mouse
+            if mouse::Button::Left.is_pressed()
             {
                 self.move_piece(window); 
             }
@@ -200,7 +206,7 @@ impl<'a> Game<'a>
             self.temp_move.set( self.recorder.board_mut().remove(&square), Some(square) );
         }
 
-        self.handle_input();
+        self.handle_input(window);
     }
 
     fn evaluate_move(&mut self, window: &mut RenderWindow)
@@ -258,9 +264,8 @@ impl<'a> Game<'a>
         let square = self.temp_move.take_square().unwrap();
         self.recorder.place( piece, square );
     }
-    fn handle_input(&mut self)
+    fn handle_input(&mut self, window: &mut RenderWindow)
     {
-    
         use sfml::window::Key;
         if Key::Left.is_pressed() && !self.pressed_left
         {
@@ -283,6 +288,36 @@ impl<'a> Game<'a>
         {
             self.pressed_right = false;
         }
+
+        self.handle_mouse_input(window); 
+    }
+
+    fn handle_mouse_input(&mut self, window: &mut RenderWindow)
+    {
+        use sfml::window::mouse;
+        if mouse::Button::Right.is_pressed() && !self.m1
+        {
+            self.push_square( utility::get_square(window) );
+            self.m1 = true;
+        }
+        if !mouse::Button::Right.is_pressed() && self.m1
+        {
+            self.push_square( utility::get_square(window) );
+            self.eval_squares();
+            self.m1 = false;
+        }
+
+        if mouse::Button::Left.is_pressed() && !self.m2
+        {
+            self.clear_arrows();
+            self.clear_squares();
+            self.m2 = true;
+        }
+        if !mouse::Button::Left.is_pressed() && self.m2
+        {
+            self.m2 = false;
+        }
+
     }
 
     #[inline]

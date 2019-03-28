@@ -21,11 +21,13 @@ impl Input
     pub fn new() -> Input
     {
         let channel = channel();
-            Input {
+        let mut input = Input {
                 send: channel.0,
                 recv: channel.1,
                 has_started: false,
-            }
+            };
+        input.init();
+        input
     
     }
 
