@@ -167,15 +167,21 @@ impl<'a> Game<'a>
     fn evaluate_move(&mut self, window: &mut RenderWindow)
     {
         let mut piece = self.temp_move.piece.take().unwrap();
-        if self.legal_move(&mut piece, window)
+        
+        if !self.legal_move(&mut piece, window)
         {
+            // place piece back on board
+            self.place_back(piece);
+            return;
+        }
+
             let square = utility::get_square(window);
-            self.recorder.record( self.construct_move(&piece, square.clone()));
             let _type = piece.get_type();
-            
             self.handle_king_moves(&square, &_type);
 
+            self.recorder.record( self.construct_move(&piece, square.clone()));
             self.recorder.place( piece, square.clone());
+
             if !self.check(&self.turn)
             {
                 self.turn = !self.turn.clone()
@@ -185,12 +191,6 @@ impl<'a> Game<'a>
                 self.recorder._undo();
                 self.handle_king_moves(&square, &_type);
             }
-        }
-        else
-        {
-            self.place_back(piece);
-        }
-        
     }
 
     #[inline]
