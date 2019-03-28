@@ -17,61 +17,9 @@ use pieces::Piece;
 use highlight::Highlight;
 use arrow::Arrow;
 
-
 use utility;
-struct TempMove<'a>
-{
-    piece: Option<Piece<'a>>,
-    old_pos: Option<Square>
-}
+use temp_move::TempMove;
 
-impl<'a> TempMove<'a>
-{
-    fn new() -> Self
-    {
-        TempMove {
-            piece: None,
-            old_pos: None
-        }
-    }
-
-    fn with(mut self, piece: Option<Piece<'a>>, square: Option<Square>) -> Self
-    {
-        self.piece = piece;
-        self.old_pos = square;
-        self
-    }
-
-    fn set(&mut self, piece: Option<Piece<'a>>, square: Option<Square>)
-    {
-        self.piece = piece;
-        self.old_pos = square;
-    }
-
-    fn is_some(&self) -> bool
-    {
-        self.piece.is_some()
-    }
-
-    fn as_mut(&mut self) -> Option<&mut Piece<'a>>
-    {
-        self.piece.as_mut()
-    }
-     
-    fn as_ref(&self) -> Option<&Piece<'a>>
-    {
-        self.piece.as_ref()
-    }
-    fn square(&self) -> Option<&Square>
-    {
-        self.old_pos.as_ref()
-    }
-
-    fn take_square(&mut self) -> Option<Square>
-    {
-        self.old_pos.take()
-    }
-}
 
 pub struct Game<'a>
 {
@@ -103,6 +51,7 @@ impl<'a> Game<'a>
             temp_move: TempMove::new(),
             recorder: Recorder::new(res, window),
             turn: Color::White,
+
             m1: false,
             m2: false,
 
@@ -138,7 +87,13 @@ impl<'a> Game<'a>
         else
         {
             // draw arrow
-            self.arrows.push( Arrow::new(self.board_size(), &s1, &s2) );
+            if let Some(arrow) = Arrow::new(self.board_size(), &s1, &s2)
+            {
+                if self.arrows.remove_item(&arrow).is_none()
+                {
+                    self.arrows.push(arrow);
+                }
+            }
         }
     }
 

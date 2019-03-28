@@ -14,15 +14,21 @@ pub struct Arrow<'a>
 
 impl<'a> Arrow<'a>
 {
-    pub fn new(board_size: Vector2u, from: &Square, to: &Square) -> Self
+    pub fn new(board_size: Vector2u, from: &Square, to: &Square) -> Option<Self>
     {
         let color = sfml::graphics::Color::rgba(249, 212, 35, 230);
-        let angle = angle::get_angle(to, from);
+        let option_angle = angle::get_angle(to, from);
+        if option_angle.is_none()
+        {
+            return None;
+        }
+        let angle = option_angle.unwrap();
 
-        Arrow {
+
+        Some(Arrow {
             rect: create_rect(from, to, angle, &board_size, &color),
             shape: create_triangle(to, angle, &board_size, &color)
-        }
+        })
     }
 }
 fn create_triangle<'s>(to: &Square, angle: f32, board_size: &Vector2u, color: &Color) -> CustomShape<'s>
@@ -80,6 +86,7 @@ fn create_rect<'s>(from: &Square, to: &Square, angle: f32, board_size: &Vector2u
 
     return rect;
 }
+
 impl<'s> sfml::graphics::Drawable for Arrow<'s>
 {
     fn draw<'a: 'shader, 'texture, 'shader, 'shader_texture>(
@@ -93,6 +100,14 @@ impl<'s> sfml::graphics::Drawable for Arrow<'s>
     }
 }
 
+impl<'s> std::cmp::PartialEq for Arrow<'s>
+{
+    fn eq(&self, rhs: &Arrow) -> bool
+    {
+        self.shape.position() == rhs.shape.position() 
+            && self.rect.position() == rhs.rect.position()
+    }
+}
 
 struct TriangleShape(Vector2f, Vector2f, Vector2f);
 impl TriangleShape

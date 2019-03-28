@@ -6,7 +6,6 @@ use sfml::graphics::{RenderWindow};
 use std::env::args;
 #[allow(non_snake_case)]
 
-
 mod board;
 mod game;
 mod pieces;
@@ -24,6 +23,7 @@ mod input;
 mod highlight;
 mod arrow;
 mod angle;
+mod temp_move;
 
 use new_index::*;
 use game::{Game, init_recourse};
@@ -47,9 +47,6 @@ fn main()
     let mut game = Game::new(&res, &window);
    
     let input = Input::new();
-    //input.init();
-
-
 
     while window.is_open()
     {
@@ -96,6 +93,5 @@ fn size_args_or_default(default: (u32, u32)) -> (u32, u32)
                 _ => default,
             },
         _ => default,
-         
     }
 }
