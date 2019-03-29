@@ -5,7 +5,8 @@ use self::futures::future::*;
 use new_index::_Index;
 use square::Square;
 use pieces::Pawn;
-use recorder::{Recorder, ChessSet};
+use recorder::{Recorder};
+use chess_set::ChessSet;
 use color::Color;
 
 pub fn mov(
@@ -63,7 +64,7 @@ pub fn mov(
         temp_square.set(curr_square.col as i32 - 1, curr_square.row as i32 + 1 * mask_color);
         if let Some(piece) = rec.board().get(&temp_square)
         {
-            if new_square == &temp_square && &piece.color == !&color
+            if new_square == &temp_square && &piece.borrow().color == !&color
             {
                 return future::ok(None);
             }
@@ -74,7 +75,7 @@ pub fn mov(
         temp_square.set(curr_square.col as i32 + 1, curr_square.row as i32 + 1 * mask_color);
         if let Some(piece) = rec.board().get(&temp_square)
         {
-            if new_square == &temp_square && &piece.color == !&color
+            if new_square == &temp_square && &piece.borrow().color == !&color
             {
                 return future::ok(None);
             }
@@ -98,7 +99,7 @@ pub fn mov(
                 let enemy_color = !color.clone();
                 match board.get(m.to())
                 {
-                    Some(p) => if p.get_type() == _Index::Pawn(enemy_color) 
+                    Some(p) => if p.borrow().get_type() == _Index::Pawn(enemy_color) 
                     {
                         return future::ok(Some(m.to().clone()));
                     }

@@ -1,13 +1,11 @@
-#![allow(unused_variables)]
-#![allow(dead_code)]
-
 use new_index::_Index;
 use std::collections::HashSet;
 
 use color::Color;
 use std::collections::HashMap;          
 use square::Square;
-use recorder::Move;
+use r#move::Move;
+
 pub struct Constructor
 {
     knights: Vec<HashMap<Square, _Index<Color>>>,
@@ -16,97 +14,99 @@ pub struct Constructor
     queens: Vec<(Square, _Index<Color>)>,
     kings: Vec<(Square, _Index<Color>)>,
     pawns: Vec<HashMap<Square, _Index<Color>>>,
-    moves: Option<Vec<Move>>
+}
+
+fn create_officers(
+        (x1, x2): (u8, u8),
+        (index1, type1_, y1): (usize, _Index<Color>, u8),
+        (index2, type2_, y2): (usize, _Index<Color>, u8))
+-> Vec<HashMap<Square, _Index<Color>>>
+{
+    let mut vec = Vec::with_capacity(2);
+    let mut officer_white = HashMap::with_capacity(2);
+    let mut officer_black = HashMap::with_capacity(2);
+
+    let s1 = Square::new(x1, y1);
+    let s2 = Square::new(x2, y1);
+    
+    officer_white.insert(s1, type1_.clone());
+    officer_white.insert(s2, type1_);
+    
+
+    let s1 = Square::new(x1, y2);
+    let s2 = Square::new(x2, y2);
+    
+    officer_black.insert(s1, type2_.clone());
+    officer_black.insert(s2, type2_);
 
 
+    vec.insert(index1, officer_white);
+    vec.insert(index2, officer_black);
+    vec
+}
+
+
+fn create_royals(
+            x: u8, 
+            (index1, type1_, y1): (usize, _Index<Color>, u8), 
+            (index2, type2_, y2): (usize, _Index<Color>, u8)) 
+-> Vec<(Square, _Index<Color>)>
+{
+   let mut vec = Vec::with_capacity(2);
+   let q1 = (Square::new(x, y1), type1_);
+   let q2 = (Square::new(x, y2), type2_);
+
+   vec.insert(index1, q1);
+   vec.insert(index2, q2);
+   vec
+}
+
+fn create_pawns() -> Vec<HashMap<Square, _Index<Color>>>
+{
+    let mut pawns = Vec::with_capacity(2);
+    let mut pawns_white = HashMap::with_capacity(7);
+    let mut pawns_black = HashMap::with_capacity(7);
+
+    for i in 0..=7
+    {
+        pawns_white.insert( Square::new(i, 6), _Index::Pawn(Color::White) );
+        pawns_black.insert( Square::new(i, 1), _Index::Pawn(Color::Black) );
+    }
+    pawns.insert(0, pawns_white);
+    pawns.insert(1, pawns_black);
+
+    pawns
 }
 
 impl Constructor
 {
     pub fn new() -> Self
     {
-        let mut knigts = Vec::with_capacity(2);
-        let mut knight_white = HashMap::with_capacity(2);
-        let mut knight_black = HashMap::with_capacity(2);
-        let s1 = Square::new(1, 7);
-        let s2 = Square::new(6, 7);
+        let knigts = create_officers(
+                    (1, 6),
+                    (0, _Index::Knight(Color::White), 7),
+                    (1, _Index::Knight(Color::Black), 0));
+                                        
+        let rooks = create_officers(
+                    (0, 7),
+                    (0, _Index::Rook(Color::White), 7),
+                    (1, _Index::Rook(Color::Black), 0));
+        let bishops = create_officers(
+                    (2, 5),
+                    (0, _Index::Bishop(Color::White), 7),
+                    (1, _Index::Bishop(Color::Black), 0));
 
-        knight_white.insert(s1, _Index::Knight(Color::White));
-        knight_white.insert(s2, _Index::Knight(Color::White));
-
-        let s1 = Square::new(1, 0);
-        let s2 = Square::new(6, 0);
-
-        knight_black.insert(s1, _Index::Knight(Color::Black));
-        knight_black.insert(s2, _Index::Knight(Color::Black));
-
-        knigts.insert(0, knight_white);
-        knigts.insert(1, knight_black);
+        let queens = create_royals(
+                     3, 
+                    (0, _Index::Queen(Color::White), 7), 
+                    (1, _Index::Queen(Color::Black), 0));
         
-        let mut rooks = Vec::with_capacity(2);
-        let mut rooks_white = HashMap::with_capacity(2);
-        let mut rooks_black = HashMap::with_capacity(2);
+        let  kings = create_royals(
+                     4, 
+                    (0, _Index::King(Color::White), 7), 
+                    (1, _Index::King(Color::Black), 0));
 
-        let s1 = Square::new(0, 7);
-        let s2 = Square::new(7, 7);
-
-        rooks_white.insert(s1, _Index::Rook(Color::White));
-        rooks_white.insert(s2, _Index::Rook(Color::White));
-
-        let s1 = Square::new(0, 0);
-        let s2 = Square::new(7, 0);
-
-        rooks_black.insert(s1, _Index::Rook(Color::Black));
-        rooks_black.insert(s2, _Index::Rook(Color::Black));
-
-        rooks.insert(0, rooks_white);
-        rooks.insert(1, rooks_black);
-        
-
-        let mut bishops = Vec::with_capacity(2);
-        let mut bishops_white = HashMap::with_capacity(2);
-        let mut bishops_black = HashMap::with_capacity(2);
-
-        let s1 = Square::new(2, 7);
-        let s2 = Square::new(5, 7);
-
-        bishops_white.insert(s1, _Index::Bishop(Color::White));
-        bishops_white.insert(s2, _Index::Bishop(Color::White));
-
-        let s1 = Square::new(2, 0);
-        let s2 = Square::new(5, 0);
-
-        bishops_black.insert(s1, _Index::Bishop(Color::Black));
-        bishops_black.insert(s2, _Index::Bishop(Color::Black));
-
-        bishops.insert(0, bishops_white);
-        bishops.insert(1, bishops_black);
-
-
-        let mut queens = Vec::with_capacity(2);
-        let q1 = (Square::new(3, 7), _Index::Queen(Color::White));
-        let q2 = (Square::new(3, 0), _Index::Queen(Color::Black));
-        queens.insert(0, q1);
-        queens.insert(1, q2);
-        
-        let mut kings = Vec::with_capacity(2);
-        let k1 = (Square::new(4, 7), _Index::King(Color::White));
-        let k2 = (Square::new(4, 0), _Index::King(Color::Black));
-        kings.insert(0, k1);
-        kings.insert(1, k2);
-
-        let mut pawns = Vec::with_capacity(2);
-        let mut pawns_white = HashMap::with_capacity(7);
-        let mut pawns_black = HashMap::with_capacity(7);
-
-        for i in 0..=7
-        {
-            pawns_white.insert( Square::new(i, 6), _Index::Pawn(Color::White) );
-            pawns_black.insert( Square::new(i, 1), _Index::Pawn(Color::Black) );
-        }
-        pawns.insert(0, pawns_white);
-        pawns.insert(1, pawns_black);
-
+        let pawns = create_pawns();
 
         Constructor {
             knights: knigts,
@@ -115,16 +115,15 @@ impl Constructor
             kings: kings,
             queens: queens,
             pawns: pawns,
-            moves: None
         }
     }
 
     pub fn parse_move(&mut self, notation: &str, color: Color) -> Move
     {
-		if notation.starts_with("O")
-		{
-			return self.castle(notation.len(), color);
-		}
+        if notation.starts_with("O")
+        {
+                return self.castle(notation.len(), color);
+        }
         let mut iter = notation.chars();
         let letter = iter.next().unwrap();
         match letter
@@ -139,9 +138,9 @@ impl Constructor
         }
     }
 
-	fn castle(&mut self, length: usize, color: Color) -> Move
-	{
-		//0-0: 3, 0-0-0: 5
+    fn castle(&mut self, length: usize, color: Color) -> Move
+    {
+            //0-0: 3, 0-0-0: 5
         let row = match &color { &Color::White => 7, _ => 0 };
         if length == 3
         {
@@ -160,20 +159,21 @@ impl Constructor
                 capture: None,
             };
         }
-            let from = Square::new(4, row);
-            let to = Square::new(2, row);
-            self.fix_move(from.clone(), to.clone(), _Index::King(color.clone()));
+        let from = Square::new(4, row);
+        let to = Square::new(2, row);
+        self.fix_move(from.clone(), to.clone(), _Index::King(color.clone()));
 
-            let _to = Square::new(4, row);
-            let _from = Square::new(0, row);
-            self.fix_move(_from.clone(), _to.clone(), _Index::Rook(color.clone()));
+        let _to = Square::new(4, row);
+        let _from = Square::new(0, row);
+        self.fix_move(_from.clone(), _to.clone(), _Index::Rook(color.clone()));
+        
         Move {
             piece: _Index::King(color),
             from: Square::new(4, row),
             to: Square::new(2, row),
             capture: None
         }
-	}    
+    }    
 
     fn knight(&mut self, mut iter: std::str::Chars, color: Color) -> Move
     {
@@ -615,10 +615,6 @@ impl Constructor
         return one_down; // two_down
     }
 
-    fn get_index(&self, square: &Square) -> _Index<Color>
-    {
-        unimplemented!() 
-    }
     fn piece_set<'a>(&self) -> HashSet<Square>
     {
         let mut set: HashSet<Square> = HashSet::new();
@@ -745,6 +741,4 @@ impl Constructor
     {
         match color { &Color::White => 0, _ => 1} 
     }
-
-
 }

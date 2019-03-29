@@ -12,10 +12,10 @@ use resources::Resources;
 extern crate sfml;
 use sfml::graphics::{RenderWindow, RenderTarget, Transformable};
 use sfml::system::Vector2f;
-use recorder::ChessSet;
-// piece, res, scale, index
 
-use new_index::*;
+use chess_set::ChessSet;
+
+use new_index::_Index;
 use KEY;
 
 pub fn m_create_kings<'a>(set: &mut ChessSet)
@@ -30,6 +30,7 @@ pub fn p_create_king<'a>(set: &mut ChessSet, text: _Index<Color>)
     let square = match &color { &Color::White => Square::new(4, 7), _ => Square::new(4, 0) };
     let piece = _create_piece(King::new(), color)
                     .and_then(|p| set_texture(p, set.resource(), set.scale(), &text)).wait().unwrap();
+    
     set.place(piece, square); 
 }
 pub fn m_create_queens(set: &mut ChessSet)

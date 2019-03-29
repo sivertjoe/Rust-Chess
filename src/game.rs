@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 extern crate sfml;
 extern crate futures;
 
@@ -7,7 +6,9 @@ use sfml::graphics::{RenderWindow, RenderTarget,  Transformable};
 use sfml::system::{ Vector2u};
 use resources::Resources;
 use color::Color;
-use recorder::{Recorder, ChessSet, Move};
+use recorder::{Recorder};
+use chess_set::ChessSet;
+use r#move::Move;
 
 use KEY;
 use new_index::*;
@@ -20,6 +21,8 @@ use arrow::Arrow;
 use utility;
 use temp_move::TempMove;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct Game<'a>
 {
@@ -34,6 +37,7 @@ pub struct Game<'a>
 
     m1: bool,
     m2: bool,
+    board_size: Vector2u,
 
 
     highlighed_squares: Vec<Highlight<'a>>,
@@ -54,6 +58,7 @@ impl<'a> Game<'a>
 
             m1: false,
             m2: false,
+            board_size: window.size(),
 
             input_square: Vec::new(),
             highlighed_squares: Vec::new(),
@@ -135,7 +140,7 @@ impl<'a> Game<'a>
         
         if self.temp_move.is_some()
         {
-            window.draw( &self.temp_move.as_ref().unwrap().sprite );
+            window.draw( &self.temp_move.as_ref().unwrap().borrow().sprite );
         }
     }
 
@@ -177,11 +182,9 @@ impl<'a> Game<'a>
         }
 
             let square = utility::get_square(window);
-            let _type = piece.get_type();
-            self.handle_king_moves(&square, &_type);
 
-            self.recorder.record( self.construct_move(&piece, square.clone()));
-            self.recorder.place( piece, square.clone());
+            self.recorder.record( self.construct_move(&piece.borrow(), square.clone()));
+            self.recorder.rc_place( piece, square.clone());
 
             if !self.check(&self.turn)
             {
@@ -190,35 +193,14 @@ impl<'a> Game<'a>
             else
             {
                 self.recorder._undo();
-                self.handle_king_moves(&square, &_type);
             }
     }
 
     #[inline]
-    fn handle_king_moves(&mut self, square: &Square, _type: &_Index<Color>)
-    {
-        match _type
-        {
-            &_Index::King(_) =>
-            {
-                self.update_kingpos(&square);
-            }
-            _ => {},
-        };
-    }
-    #[inline]
-    fn update_kingpos(&mut self, square: &Square)
-    {
-        self.recorder._board().update_king(
-            &self.turn, 
-            &square)
-    }
-
-    #[inline]
-    fn place_back(&mut self, piece: Piece<'a>)
+    fn place_back(&mut self, piece: Rc<RefCell<Piece<'a>>>)
     {
         let square = self.temp_move.take_square().unwrap();
-        self.recorder.place( piece, square );
+        self.recorder.rc_place( piece, square );
     }
     fn handle_input(&mut self, window: &mut RenderWindow)
     {
@@ -290,12 +272,13 @@ impl<'a> Game<'a>
     #[inline]
     fn move_piece(&mut self, window: &mut RenderWindow)
     {
-        self.temp_move.as_mut().unwrap().sprite.set_position( utility::get_mousemid(window) );
+        self.temp_move.as_mut().unwrap().borrow_mut().sprite.set_position( utility::get_mousemid(window) );
     }
 
-    fn legal_move(&mut self, piece: &mut Piece<'a>, window: &mut RenderWindow) -> bool
+    fn legal_move(&mut self, rcpiece: &mut Rc<RefCell<Piece<'a>>>, window: &mut RenderWindow) -> bool
     {
         use self::futures::prelude::*;
+        let piece = rcpiece.borrow();
         if piece.color() != &self.turn
         {
             return false;
@@ -324,8 +307,10 @@ impl<'a> Game<'a>
 
     fn handle_en_passant_castle(&mut self, s: Square)
     {
-        let p = self.recorder.board_mut().remove(&s).unwrap();
-        match p.get_type()
+        let rc_p = self.recorder.board_mut().remove(&s).unwrap();
+        let piece_type = rc_p.borrow().get_type();
+
+        match piece_type
         {
             _Index::Pawn(_) => {}, // Remove it
             _Index::Rook(_) => // Castle
@@ -337,7 +322,7 @@ impl<'a> Game<'a>
                     _ => unreachable!()
                 };
                 let square = Square::new(square_col, s.row);
-                self.recorder.place(p, square);
+                self.recorder.rc_place(rc_p, square);
             }, 
             _ => unreachable!()
         }
@@ -345,12 +330,17 @@ impl<'a> Game<'a>
 
     fn check(&self, color: &Color) -> bool
     {
-        let ns = self.recorder.ref_board().get_king(color);
-        self.recorder.board().iter().find(|(s, p)|
+        let kingpos = self.recorder.ref_board().get_kingpos(color);
+        let ns = utility::get_square_from_vec(&kingpos, &self.board_size);
+
+        self.recorder.board().iter().find(|(s, rc_p)|
         {
+
+            let p = rc_p.borrow();
+
             use self::futures::prelude::*;
             if &p.color == color { return false; } 
-            match p.try_move(&self.recorder, s, ns).poll()
+            match p.try_move(&self.recorder, s, &ns).poll()
             {
                 Ok(Async::Ready(_)) => true, 
                 _ => false,

@@ -4,7 +4,6 @@ extern crate sfml;
 use sfml::window::{VideoMode, Style, Event};
 use sfml::graphics::{RenderWindow};
 use std::env::args;
-#[allow(non_snake_case)]
 
 mod board;
 mod game;
@@ -24,6 +23,8 @@ mod highlight;
 mod arrow;
 mod angle;
 mod temp_move;
+mod r#move;
+mod chess_set;
 
 use new_index::*;
 use game::{Game, init_recourse};

@@ -5,6 +5,8 @@ use square::Square;
 use color::Color;
 use new_index::_Index;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 // Get the square the mouse is hovering over
 pub fn get_square(window: &mut RenderWindow) -> Square 
 {
@@ -20,10 +22,10 @@ pub fn get_square(window: &mut RenderWindow) -> Square
 }
 
 
-pub fn get_square_from_vec(v: &Vector2f, window: &mut RenderWindow) -> Square 
+pub fn get_square_from_vec(v: &Vector2f, board_size: &Vector2u) -> Square 
 {
     let board_pos = v;
-    let square_size = window.size().y as i32 / 8;
+    let square_size = board_size.y as i32 / 8;
 
     let row = (board_pos.x / square_size as f32).ceil() as u8;
     let col = (board_pos.y / square_size as f32).ceil() as u8;
@@ -50,18 +52,18 @@ pub fn get_boardpos(size: &Vector2u, square: &Square) -> Vector2f
     )
 }
 
-use recorder::Move;
+use r#move::Move;
 use pieces::Piece;
 use std::collections::HashMap;
 
 pub fn construct_move<'a>(
     piece: &Piece<'a>, 
-    board: &HashMap<Square, Piece<'a>>, 
+    board: &HashMap<Square, Rc<RefCell<Piece<'a>>>>, 
     new: Square, 
     old: Square
     ) -> Move
 {
-    let capture = board.get(&new).map_or(None, |p| Some(p.get_type()) );
+    let capture = board.get(&new).map_or(None, |p| Some(p.borrow().get_type()) );
     Move::new(piece.get_type(), new, old, capture)
 }
 

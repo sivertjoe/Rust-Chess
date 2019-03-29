@@ -10,7 +10,6 @@ pub struct Resources<K>
 }
 
 
-#[allow(dead_code)]
 impl<K> Resources<K>
 where K: Hash + Eq,
 {

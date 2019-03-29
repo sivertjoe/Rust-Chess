@@ -82,6 +82,7 @@ impl Input
             {
                 println!("{}", _game.recorder.n_moves() / 2);
             }
+            Some("exit") => std::process::exit(0),
             _ => return,
         }
     }

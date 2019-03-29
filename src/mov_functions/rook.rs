@@ -51,7 +51,7 @@ pub fn mov(
     {
         if let Some(piece) = rec.board().get(&temp_square)
         {
-            if &piece.color == !&color && &temp_square == new_square
+            if &piece.borrow().color == !&color && &temp_square == new_square
             {
                 return future::ok(None);
             }

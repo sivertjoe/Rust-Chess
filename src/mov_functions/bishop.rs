@@ -50,7 +50,7 @@ pub fn mov(
     }
     if let Some(piece) = rec.board().get(&new_square)
     {
-        return match piece.color == color
+        return match piece.borrow().color == color
         {
             true => future::err(()),
             _ => future::ok(None),

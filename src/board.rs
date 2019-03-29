@@ -1,52 +1,45 @@
 extern crate sfml;
-use sfml::graphics::{Sprite, RenderWindow, RenderTarget};
-use sfml::system::{Vector2u};
+use sfml::graphics::{Sprite, RenderWindow, RenderTarget, Transformable};
+use sfml::system::{Vector2u, Vector2f};
 use std::collections::HashMap;
 use new_piece_creator;
 use pieces::Piece;
 use square::Square;
 use resources::Resources;   
 use color::Color;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use KEY;
-#[allow(dead_code)]
 pub struct Board<'a>
 {
-    squares: HashMap<Square, Piece<'a>>,
+    squares: HashMap<Square, Rc<RefCell<Piece<'a>>>>,
     board  : Sprite<'a>,
     size: Vector2u,
     scale: f32,
 
-    kings: HashMap<Color, Square>,
 
-    //pub king_pos: HashMap<Color, Box<*const Piece<'a>>>
+
+    king_pos: HashMap<Color, Rc<RefCell<Piece<'a>>>>,
 }
 
-#[allow(dead_code)]
 impl<'a> Board<'a>
 {
     pub fn new(res: &'a Resources<KEY>, window: &RenderWindow) -> Self
     {
         let (board, scale) = new_piece_creator::create_board(res, window);
-                // White King Pos   -   Black King Pos
-        let pos = (Square::new(4, 7), Square::new(4, 0));
-        let mut set = HashMap::new();
-        set.insert(Color::White, pos.0);
-        set.insert(Color::Black, pos.1);
         
-
         Board {
             squares: HashMap::new(),
             board: board,
             size: window.size(),
             scale: scale,
 
-            kings: set,
-            //king_pos: HashMap::new(),
+            king_pos: HashMap::new(),
         }
     }
     #[inline]
-    pub fn get_piece(&mut self, square: &Square) -> Option<Piece<'a>>
+    pub fn get_piece(&mut self, square: &Square) -> Option<Rc<RefCell<Piece<'a>>>>
     {
         self.squares.remove(square)
     }
@@ -59,11 +52,20 @@ impl<'a> Board<'a>
     #[inline]
     pub fn display_pieces(&self, window: &mut RenderWindow)
     {
-        self.squares.values().for_each(|p| window.draw(&p.sprite))
+        self.squares.values().for_each(|p|
+        {
+            window.draw(&p.borrow().sprite);
+        });
     }
 
     #[inline]
     pub fn place(&mut self, p: Piece<'a>, s: Square)
+    {
+        self.squares.insert(s, Rc::new(RefCell::new(p)));
+    }
+
+    #[inline]
+    pub fn rc_place(&mut self, p: Rc<RefCell<Piece<'a>>>, s: Square)
     {
         self.squares.insert(s, p);
     }
@@ -79,13 +81,13 @@ impl<'a> Board<'a>
         self.size
     }
     #[inline]
-    pub fn board_mut(&mut self) -> &mut HashMap<Square, Piece<'a>>
+    pub fn board_mut(&mut self) -> &mut HashMap<Square, Rc<RefCell<Piece<'a>>>>
     {
         &mut self.squares
     }
     
     #[inline]
-    pub fn board(&self) -> &HashMap<Square, Piece<'a>>
+    pub fn board(&self) -> &HashMap<Square, Rc<RefCell<Piece<'a>>>>
     {
         &self.squares
     }
@@ -93,29 +95,19 @@ impl<'a> Board<'a>
     #[inline]
     pub fn set_kings(&mut self)
     {
-        /*let pos = (Square::new(4, 7), Square::new(4, 0));
+        let pos = (Square::new(4, 7), Square::new(4, 0));
 
-        let wking = self.squares.remove(&pos.0).unwrap();
-        let king_pointer: *const Piece= &wking;
-        self.king_pos.insert(Color::White, Box::new(king_pointer));
+        let bk = Rc::clone( self.squares.get(&pos.1).unwrap() );
+        self.king_pos.insert(Color::Black, bk);
 
-        let bking = self.squares.remove(&pos.1).unwrap();
-        let king_pointer: *const Piece= &wking;
-        self.king_pos.insert(Color::Black, king_pointer);
-
-        self.squares.insert(pos.0, wking);
-        self.squares.insert(pos.1, bking);*/
-    }
-    #[inline]
-    pub fn update_king(&mut self, c: &Color, new_pos: &Square)
-    {
-        self.kings.get_mut(c).unwrap().set(new_pos.col, new_pos.row);
+        let wk = Rc::clone( self.squares.get(&pos.0).unwrap() );
+        self.king_pos.insert(Color::White, wk);
     }
 
     #[inline]
-    pub fn get_king(&self, color: &Color) -> &Square
+    pub fn get_kingpos(&self, color: &Color) -> Vector2f
     {
-        self.kings.get(color).unwrap()
+        self.king_pos.get(color).unwrap().borrow().sprite.position()
     }
 
 

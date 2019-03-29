@@ -1,10 +1,12 @@
 use pieces::Piece;
 use square::Square;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct TempMove<'a>
 {
-    pub piece: Option<Piece<'a>>,
+    pub piece: Option<Rc<RefCell<Piece<'a>>>>,
     pub old_pos: Option<Square>
 
 }
@@ -20,7 +22,7 @@ impl<'a> TempMove<'a>
     }
 
 
-    pub fn set(&mut self, piece: Option<Piece<'a>>, square: Option<Square>)
+    pub fn set(&mut self, piece: Option<Rc<RefCell<Piece<'a>>>>, square: Option<Square>)
     {
         self.piece = piece;
         self.old_pos = square;
@@ -31,12 +33,12 @@ impl<'a> TempMove<'a>
         self.piece.is_some()
     }
 
-    pub fn as_mut(&mut self) -> Option<&mut Piece<'a>>
+    pub fn as_mut(&mut self) -> Option<&mut Rc<RefCell<Piece<'a>>>>
     {
         self.piece.as_mut()
     }
      
-    pub fn as_ref(&self) -> Option<&Piece<'a>>
+    pub fn as_ref(&self) -> Option<&Rc<RefCell<Piece<'a>>>>
     {
         self.piece.as_ref()
     }
