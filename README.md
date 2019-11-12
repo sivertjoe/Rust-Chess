@@ -1,4 +1,4 @@
-# Future-chess
+# Rust-chess
 Just a simple chess implementation in Rust
 
 CSFML is needed,
